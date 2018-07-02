@@ -20,7 +20,7 @@ async def on_member_join(member):
     await client.add_roles(member, role)
 
 
-@client.command(channel='')
+@client.command()
 async def meme():
     try:
         get = Meme().run()
