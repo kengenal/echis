@@ -1,2 +1,2 @@
-# doscord-meme-bot
-simple meme bot
+# Discord-MultiBot
+simple Discord-MultiBot
