@@ -1,8 +1,8 @@
 import discord
 import sys
 import youtube_dl
-#import asyncio
-
+import asyncio
+import os
 import configparser
 from discord.ext import commands
 from src.lib.config_loader import config
@@ -13,12 +13,29 @@ from discord import player
 
 
 class MusicCog(commands.Cog):
+
     def __init__(self, client):
         self.client = client
         self.config = config()
         self.settings = self.config["SETTINGS"]
+        self.is_play = False
+        self.songs = []
 
-    @commands.command(pass_context=True)
+    async def audio_player_task(self, ctx, player):
+        while True:
+            songs = self.songs
+            if not player.is_playing() and songs != []:
+                print(songs[0].title)
+                player.play(songs[0])
+                if self.is_play:
+                    await ctx.send(f"Next in queue : {songs[0].title}")
+                else:
+                    await ctx.send(f"Now playing : {songs[0].title}")
+                self.songs.remove(songs[0])
+            elif self.songs == []:
+                break
+
+    @commands.command()
     async def play(self, ctx, query:str):
         url = None
         if is_url(query) or str(self.config["TOKENS"]["youtube"]) is None:
@@ -28,9 +45,9 @@ class MusicCog(commands.Cog):
             search.run()
             url = search.get_url
         async with ctx.typing():
-            player = await YoutubeStream.from_url(url, loop=self.client.loop, stream=True)
-            ctx.voice_client.play(player, after=lambda e: print('Player error: %s' % e) if e else None)
-        await ctx.send(f"Now playing{player.title}")
+            self.songs.insert(0, await YoutubeStream.from_url(url, loop=self.client.loop, stream=False))
+            player = ctx.voice_client
+            self.client.loop.create_task(self.audio_player_task(ctx, player))
 
     @commands.command()
     async def volume(self, ctx, volume:int):
@@ -43,10 +60,51 @@ class MusicCog(commands.Cog):
         ctx.voice_client.source.volume = volume / 100
         await ctx.send(f"Changed volume to {volume}")
 
+
     @commands.command()
     async def stop(self, ctx):
         await ctx.voice_client.disconnect()
 
+    @commands.command()
+    async def add(self, ctx, query:str):
+        url = None
+        if is_url(query) or str(self.config["TOKENS"]["youtube"]) is None:
+            url = query
+        else:
+            search = YoutubeSearch(str(self.config["TOKENS"]["youtube"]))
+            search.run()
+            url = search.get_url
+        if url:
+            self.songs.append(await YoutubeStream.from_url(url, loop=self.client.loop, stream=False))
+            await ctx.send(f"Song {query} has been added to queue")
+
+    @commands.command()
+    async def remove(self, ctx, query):
+        if isinstance(query, int):
+            self.songs.remove(query)
+        else:
+            url = None
+            if is_url(query) or str(self.config["TOKENS"]["youtube"]) is None:
+                url = query
+            else:
+                search = YoutubeSearch(str(self.config["TOKENS"]["youtube"]))
+                search.run()
+                url = search.get_url
+            
+            take = await YoutubeStream.from_url(url, loop=self.client.loop, stream=True)
+            self.songs.remove(take)
+        await ctx.send(f"Song {query} has been removed from queue")
+        
+
+    @commands.command()
+    async def queue(self, ctx):
+        embed = discord.Embed(colour=discord.Color.teal())
+        i = 1
+        for son in self.songs:
+            embed.add_field(name=i, value=son.title, inline=True)
+            i += 1
+        await ctx.send(embed=embed)
+    
     @play.before_invoke
     async def ensure_voice(self, ctx):
         if ctx.voice_client is None:
@@ -61,6 +119,8 @@ class MusicCog(commands.Cog):
                 raise commands.CommandError("Author not connected to a voice channel.")
         elif ctx.voice_client.is_playing():
             ctx.voice_client.stop()
+
+
 
 def setup(client):
     client.add_cog(MusicCog(client))
