@@ -41,7 +41,7 @@ class MusicCog(commands.Cog):
                 except Exception as error:
                     logging.error("MusicCog Error: %s", extra=error)
         else:
-            ctx.send("Take song name")
+            ctx.send(f"Take song name")
  
  
     @commands.command()
