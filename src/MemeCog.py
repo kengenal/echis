@@ -13,10 +13,10 @@ class MemeCog(commands.Cog, name="Memes"):
 
     @commands.command(pass_context=True)
     async def meme(self, ctx):
-        chan  = ctx.message.channel.id
+        chan  = ctx.message.channel.name
         channel_id = self.config["SETTINGS"]["meme"]
         url = self.config["URLS"]["reddit"]
-        if int(chan) == int(channel_id):
+        if str(chan) == str(channel_id):
             try:
                 get = Meme(url)
                 get.run()

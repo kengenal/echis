@@ -27,13 +27,14 @@ class AnyCog(commands.Cog):
             author = ctx.message.author.name
             name = self.client.get_user(id)
             channel = self.config["SETTINGS"]["admin_channel"]
+            chan = discord.utils.get(self.client.get_all_channels(), name=channel)
             embed = discord.Embed(olour=discord.Color.red())
             embed.set_author(name="Report")
             embed.add_field(name=f"User {author}: send report to {name} : {id}", 
                             value=description, inline=True
                         )
             await ctx.send("Report has been sended")
-            chan = self.client.get_channel(int(channel))
+            chan = self.client.get_channel(int(chan.id))
             await chan.send(embed=embed)
         else:
             await ctx.send("The variabe can not be empty")

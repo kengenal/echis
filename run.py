@@ -10,7 +10,6 @@ extensions = ["src.MemeCog", "src.AnyCog", "src.MusicCog"]
 
 BOT_PREFIX = "!"
 TOKEN = config["TOKENS"]["discord"]
-URLS = config["URLS"]
 prefix = config["SETTINGS"]["prefix"]
 
 if __name__ == "__main__":

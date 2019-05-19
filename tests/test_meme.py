@@ -1,9 +1,9 @@
 import sys
 import os
-sys.path.insert(0, os.path.abspath('..'))
+#sys.path.insert(0, os.path.abspath('..'))
 
 import unittest
-from src.Meme import Meme
+from src.lib.Meme import Meme
 
 class MemeTest(unittest.TestCase):
     def setUp(self):

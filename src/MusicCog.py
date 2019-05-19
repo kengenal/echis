@@ -7,8 +7,8 @@ import configparser
 from discord.ext import commands
 from src.lib.config_loader import config
 from discord.ext.commands import has_permissions
-from src.lib.Youtube import YoutubeSearch, YoutubeStream, is_url
-
+from src.lib.Youtube import  YoutubeStream, is_url
+import logging
 from discord import player
 
 
@@ -19,36 +19,31 @@ class MusicCog(commands.Cog):
         self.config = config()
         self.settings = self.config["SETTINGS"]
         self.is_play = False
-        self.songs = []
+        self.songs = asyncio.Queue()
+        self.play_next_song = asyncio.Event()
 
-    async def audio_player_task(self, ctx, player):
-        while True:
-            songs = self.songs
-            if not player.is_playing() and songs != []:
-                print(songs[0].title)
-                player.play(songs[0])
-                if self.is_play:
-                    await ctx.send(f"Next in queue : {songs[0].title}")
-                else:
-                    await ctx.send(f"Now playing : {songs[0].title}")
-                self.songs.remove(songs[0])
-            elif self.songs == []:
-                break
 
     @commands.command()
     async def play(self, ctx, query:str):
-        url = None
-        if is_url(query) or str(self.config["TOKENS"]["youtube"]) is None:
-            url = query
-        else:
-            search = YoutubeSearch(str(self.config["TOKENS"]["youtube"]))
-            search.run()
-            url = search.get_url
-        async with ctx.typing():
-            self.songs.insert(0, await YoutubeStream.from_url(url, loop=self.client.loop, stream=False))
+        if query:
+            await self.songs.put(query)
             player = ctx.voice_client
-            self.client.loop.create_task(self.audio_player_task(ctx, player))
 
+            while self.songs.qsize() > 0:
+                try:
+                    ctx.voice_client.play(
+                        await YoutubeStream.from_url(await self.songs.get(),
+                                                    loop=self.client.loop, 
+                                                    stream=False
+                                                    )
+                        )
+                    await ctx.send(f"Now playing")
+                except Exception as error:
+                    logging.error("MusicCog Error: %s", extra=error)
+        else:
+            ctx.send("Take song name")
+ 
+ 
     @commands.command()
     async def volume(self, ctx, volume:int):
         volume_graph = volume
@@ -67,34 +62,12 @@ class MusicCog(commands.Cog):
 
     @commands.command()
     async def add(self, ctx, query:str):
-        url = None
-        if is_url(query) or str(self.config["TOKENS"]["youtube"]) is None:
-            url = query
+        if query:
+            await self.songs.put(query)
+            await ctx.send(f"Song [{query}] has been added to queue")
         else:
-            search = YoutubeSearch(str(self.config["TOKENS"]["youtube"]))
-            search.run()
-            url = search.get_url
-        if url:
-            self.songs.append(await YoutubeStream.from_url(url, loop=self.client.loop, stream=False))
-            await ctx.send(f"Song {query} has been added to queue")
+            await ctx.send("You can take song name")
 
-    @commands.command()
-    async def remove(self, ctx, query):
-        if isinstance(query, int):
-            self.songs.remove(query)
-        else:
-            url = None
-            if is_url(query) or str(self.config["TOKENS"]["youtube"]) is None:
-                url = query
-            else:
-                search = YoutubeSearch(str(self.config["TOKENS"]["youtube"]))
-                search.run()
-                url = search.get_url
-            
-            take = await YoutubeStream.from_url(url, loop=self.client.loop, stream=True)
-            self.songs.remove(take)
-        await ctx.send(f"Song {query} has been removed from queue")
-        
 
     @commands.command()
     async def queue(self, ctx):
@@ -109,11 +82,14 @@ class MusicCog(commands.Cog):
     async def ensure_voice(self, ctx):
         if ctx.voice_client is None:
             if ctx.author.voice:
-                if str(self.settings["music_channel"]):
-                    channel = self.client.get_channel(int(self.settings["music_channel"]))
-                else:
-                    channel = ctx.author.voice.channel
-                await channel.connect()
+                try:
+                    if int(self.settings["music_channel"]):
+                        channel = self.client.get_channel(int(self.settings["music_channel"]))
+                    else:
+                        channel = ctx.author.voice.channel
+                    await channel.connect()
+                except discord.errors.ClientException as error:
+                    logging.error("Connect Error: %s", extra=error)
             else:
                 await ctx.send("You are not connected to a voice channel.")
                 raise commands.CommandError("Author not connected to a voice channel.")

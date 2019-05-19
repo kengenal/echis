@@ -30,62 +30,6 @@ ffmpeg_options = {
 ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
 
 
-class YoutubeSearch:
-    id = None
-    token = None
-    status = None
-    errors = None
-    url = None
-
-    def token(self, token):
-        if token is not None and token:
-            self.token = token
-        else:
-            self.errors = "Token is empty"
-            return None
-
-    def search(self, query, url):
-        if self.token is not None and url:
-            payloads = f"?part=id&type=video&maxResults=1&key={self.token}&q={query}"
-            full_url = url + payloads
-            try:
-                r = requests.get(full_url)
-            except:
-                self.errors =  "Request error, check token or query string"
-                return None
-            if r.status_code == 200:
-                data = r.json()
-                self.id = data['items'][0]['id']['videoId']
-                self.status = r.status_code
-                self.url = f"https://www.youtube.com/watch?v={self.id}"
-            else:
-                self.errors = "Request error, check token or query string"
-        else:
-            self.errors = "Token is empty or url"
-            return None
-    
-    @property
-    def get_all(self):
-        return {"status": self.status, "id": self.id}
-
-    @property
-    def get_id(self):
-        return self.id
-
-    @property
-    def get_status(self):
-        return self.status
-
-    @property
-    def get_errors(self):
-        return self.errors
-    
-    @property
-    def get_url(self):
-        return self.url
-    
-
-
 class YoutubeStream(discord.PCMVolumeTransformer):
     def __init__(self, source, *, data, volume=0.5):
         super().__init__(source, volume)
@@ -94,7 +38,7 @@ class YoutubeStream(discord.PCMVolumeTransformer):
         self.url = data.get('url')
 
     @classmethod
-    async def from_url(cls, url, *, loop=None, stream=False):
+    async def from_url(cls, url, *, loop=None, stream=True):
         try:
             loop = loop or asyncio.get_event_loop()
             data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
@@ -103,8 +47,8 @@ class YoutubeStream(discord.PCMVolumeTransformer):
                 data = data['entries'][0]
             filename = data['url'] if stream else ytdl.prepare_filename(data)
             return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data)
-        except discord.HTTPException:
-            pass
+        except discord.HTTPException as error:
+            logging.error("Youtube stream Error: %s", extra=error)
 
 
 def is_url(query):
