@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from discord.ext.commands import Bot
-from src.lib.config_loader import config
+from libs.config_loader import config
 
 class DiscordMultiBot(commands.Bot):
 

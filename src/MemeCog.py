@@ -3,8 +3,8 @@ import sys
 
 import configparser
 from discord.ext import commands
-from .lib.Meme import Meme
-from src.lib.config_loader import config
+from libs.Meme import Meme
+from libs.config_loader import config
 
 class MemeCog(commands.Cog, name="Memes"):
     def __init__(self, client):

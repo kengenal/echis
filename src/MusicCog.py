@@ -5,9 +5,9 @@ import asyncio
 import os
 import configparser
 from discord.ext import commands
-from src.lib.config_loader import config
+from libs.config_loader import config
 from discord.ext.commands import has_permissions
-from src.lib.Youtube import  YoutubeStream, is_url
+from libs.Youtube import  YoutubeStream, is_url
 import logging
 from discord import player
 
@@ -16,7 +16,7 @@ class MusicCog(commands.Cog):
 
     def __init__(self, client):
         self.client = client
-        self.config = config()
+        self.config = config(True)
         self.settings = self.config["SETTINGS"]
         self.is_play = False
         self.songs = asyncio.Queue()
@@ -28,21 +28,19 @@ class MusicCog(commands.Cog):
         if query:
             await self.songs.put(query)
             player = ctx.voice_client
-
-            while self.songs.qsize() > 0:
-                try:
-                    ctx.voice_client.play(
-                        await YoutubeStream.from_url(await self.songs.get(),
-                                                    loop=self.client.loop, 
-                                                    stream=False
-                                                    )
-                        )
-                    await ctx.send(f"Now playing")
-                except Exception as error:
-                    logging.error("MusicCog Error: %s", extra=error)
+            try:
+                ctx.voice_client.play(
+                    await YoutubeStream.from_url(await self.songs.get(),
+                                                loop=self.client.loop, 
+                                                stream=True
+                                                )
+                    )
+                await ctx.send(f"Now playing")
+            except Exception as error:
+                logging.error("MusicCog Error: %s", extra=error)
         else:
             ctx.send(f"Take song name")
- 
+        
  
     @commands.command()
     async def volume(self, ctx, volume:int):
@@ -95,7 +93,6 @@ class MusicCog(commands.Cog):
                 raise commands.CommandError("Author not connected to a voice channel.")
         elif ctx.voice_client.is_playing():
             ctx.voice_client.stop()
-
 
 
 def setup(client):
