@@ -6,7 +6,7 @@ from discord.ext.commands import Bot
 from libs.config_loader import config
 from libs.cli import cli, run, plugins
 
-config = config(True)
+config = config()
 
 extensions = ["src.MemeCog", "src.AnyCog", "src.MusicCog"]
 

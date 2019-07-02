@@ -3,6 +3,7 @@ import sys
 import youtube_dl
 import asyncio
 import os
+
 import configparser
 from discord.ext import commands
 from libs.config_loader import config
@@ -16,7 +17,7 @@ class MusicCog(commands.Cog):
 
     def __init__(self, client):
         self.client = client
-        self.config = config(True)
+        self.config = config()
         self.settings = self.config["SETTINGS"]
         self.is_play = False
         self.songs = asyncio.Queue()
@@ -29,15 +30,13 @@ class MusicCog(commands.Cog):
             await self.songs.put(query)
             player = ctx.voice_client
             try:
-                ctx.voice_client.play(
-                    await YoutubeStream.from_url(await self.songs.get(),
-                                                loop=self.client.loop, 
-                                                stream=True
-                                                )
-                    )
-                await ctx.send(f"Now playing")
+                async with ctx.typing():
+                    player = await YoutubeStream.from_url(query, loop=self.client.loop, stream=True)
+                    ctx.voice_client.play(player, after=lambda e: print('Player error: %s' % e) if e else None)
+                    await ctx.send(f"Now playing{player.title}")
             except Exception as error:
-                logging.error("MusicCog Error: %s", extra=error)
+                #logging.error("MusicCog Error: %s", extra=error)
+                print(error)
         else:
             ctx.send(f"Take song name")
         
@@ -79,6 +78,7 @@ class MusicCog(commands.Cog):
     @play.before_invoke
     async def ensure_voice(self, ctx):
         if ctx.voice_client is None:
+            print(self.settings['music_channel'])
             if ctx.author.voice:
                 try:
                     if int(self.settings["music_channel"]):
