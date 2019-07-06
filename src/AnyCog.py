@@ -3,7 +3,7 @@ import sys
 
 import configparser
 from discord.ext import commands
-from src.lib.config_loader import config
+from libs.config_loader import config
 from discord.ext.commands import has_permissions
 
 class AnyCog(commands.Cog):
@@ -42,14 +42,16 @@ class AnyCog(commands.Cog):
     @commands.command()
     @has_permissions(administrator=True)
     async def find(self, ctx, id:int):
-        chan = ctx.message.channel.id
-        channel_id = self.config["SETTINGS"]["admin_channel"]
-        if int(chan) == int(channel_id):
-            if id:
-                name = self.client.get_user(id)
-                await ctx.send(f"Name: {name}")
-            else:
-                await ctx.send("You are not server administrator")
+        if self.config.has_option("SETTINGS", "admin_channel"):
+            chan  = ctx.message.channel.name
+            # chan = ctx.message.channel.id
+            channel_name = self.config["SETTINGS"]["admin_channel"]
+            if str(chan) == str(channel_name):
+                if id:
+                    name = self.client.get_user(id)
+                    await ctx.send(f"Name: {name}")
+                else:
+                    await ctx.send("You are not server administrator")
 
 
 def setup(client):

@@ -1,7 +1,8 @@
 import configparser
 import sys
 import os
-sys.path.insert(0, os.path.abspath('../'))
+import logging
+# sys.path.insert(0, os.path.abspath('../'))
 
 def config():
     try:
@@ -15,3 +16,8 @@ def config():
     else:
         print("File doesn't exists")
        
+def log():
+    return logging.basicConfig(
+        filename='/data/logs/nieaktywne_hosty.log', 
+        level=logging.WARNING, format='%(asctime)s %(message)s'
+    )

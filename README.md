@@ -5,3 +5,4 @@ simple Discord-MultiBot
 - create unittests
 - create music bot queue
 - logging system
+- add 9GAG memes

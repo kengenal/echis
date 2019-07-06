@@ -27,11 +27,11 @@ class MusicCog(commands.Cog):
     @commands.command()
     async def play(self, ctx, query:str):
         if query:
-            await self.songs.put(query)
+            #await self.songs.put(query)
             player = ctx.voice_client
             try:
                 async with ctx.typing():
-                    player = await YoutubeStream.from_url(query, loop=self.client.loop, stream=True)
+                    player = await YoutubeStream.from_url(query, loop=self.client.loop, stream=False)
                     ctx.voice_client.play(player, after=lambda e: print('Player error: %s' % e) if e else None)
                     await ctx.send(f"Now playing{player.title}")
             except Exception as error:
@@ -78,7 +78,6 @@ class MusicCog(commands.Cog):
     @play.before_invoke
     async def ensure_voice(self, ctx):
         if ctx.voice_client is None:
-            print(self.settings['music_channel'])
             if ctx.author.voice:
                 try:
                     if int(self.settings["music_channel"]):

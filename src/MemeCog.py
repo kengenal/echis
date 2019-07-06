@@ -12,22 +12,33 @@ class MemeCog(commands.Cog, name="Memes"):
         self.config = config()
 
     @commands.command(pass_context=True)
-    async def meme(self, ctx):
+    async def reddit(self, ctx, secound:str=None):
         chan  = ctx.message.channel.name
-        channel_id = self.config["SETTINGS"]["meme"]
-        url = self.config["URLS"]["reddit"]
-        if str(chan) == str(channel_id):
-            try:
-                get = Meme(url)
-                get.run()
-                title = str(get.title)
-                image = get.image
+        if self.config.has_option("URLS", "reddit"):
+            url = self.config["URLS"]["reddit"]
 
-                embed = discord.Embed(title=title, color=discord.Color.dark_blue())
-                embed.set_image(url=image)
-                await ctx.send(embed=embed)
-            except Exception as error:
-                await ctx.send(f"Error : {error}")
+            get = Meme(url)
+            get.run()
+            title = str(get.title)
+            image = get.image
+            channel_name = None
+            
+            if self.config.has_option("SETTINGS", "meme"):
+                channel_name = self.config["SETTINGS"]["meme"]
+            if str(chan) == str(channel_name):
+                try:
+                    embed = discord.Embed(title=title, color=discord.Color.dark_blue())
+                    embed.set_image(url=image)
+                    await ctx.send(embed=embed)
+                except Exception as error:
+                    await ctx.send(f"Error : {error}")
+            elif channel_name is None:
+                try:
+                    embed = discord.Embed(title=title, color=discord.Color.dark_blue())
+                    embed.set_image(url=image)
+                    await ctx.send(embed=embed)
+                except Exception as error:
+                    await ctx.send(f"Error : {error}")
   
   
 def setup(client):
