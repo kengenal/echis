@@ -20,37 +20,38 @@ class MusicCog(commands.Cog):
         self.config = config()
         self.settings = self.config["SETTINGS"]
         self.is_play = False
-        #self.songs = asyncio.Queue(maxsize=10)
         self.play_next_song = asyncio.Event()
-        self.songs = dict()
         self.songs_url_queue = asyncio.Queue()
-        self.songs_names_queue = asyncio.Queue()
-        self.player = None
+        self.songs = asyncio.Queue()
+        self.play_next_song = asyncio.Event()
 
+
+    async def audio_player_task(self, ctx):
+        while True:
+            self.play_next_song.clear()
+            current = await self.songs.get()
+            ctx.voice_client.play(current, after=self.toggle_next)
+            await ctx.send(f"Now playing {current.title}")
+            await self.play_next_song.wait()
+        #ctx.voice_client.disconnect()
+
+
+    def toggle_next(self):
+        self.client.loop.call_soon_threadsafe(self.play_next_song.set)
 
 
     @commands.command()
     async def play(self, ctx, query:str):
         if query:
-            #await self.songs.put(query)
-            #try:
-            async with ctx.typing():
-                await self.songs_names_queue.put(query)
-                print(self.songs_names_queue.qsize())
-                while True:
-                    player = await YoutubeStream.from_url(str(await self.songs_url_queue.get()), loop=self.client.loop, stream=True)
-                    #self.payer = player
-                    ctx.voice_client.play(player, after=lambda e: print(
-                        'Player error: %s' % e) if e else None)
-                    await ctx.send(f"Now playing{player.title}")
-
-                    while not ctx.voice_client.is_playing():
-                        await asyncio.sleep(1)
-                
-                ctx.voice_client.disconnect()
-            # except Exception as error:
-            #     #logging.error("MusicCog Error: %s", extra=error)
-            #     print(error)
+            try:
+                async with ctx.typing():
+                    player = await YoutubeStream.from_url(query, loop=self.client.loop, stream=False)
+                    await self.songs.put(player)
+                    await self.client.loop.create_task(self.audio_player_task(ctx))
+                    
+            except Exception as error:
+                #logging.error("MusicCog Error: %s", extra=error)
+                print(error)
         else:
             ctx.send(f"Take song name")
         
@@ -73,7 +74,11 @@ class MusicCog(commands.Cog):
 
 
     @commands.command()
-    async def queue(self, ctx, query:str=None):
+    async def skip(self, ctx):
+        self.toggle_next()
+
+    @commands.command()
+    async def queue(self, ctx, query:str=None, song:str=None):
         if query is None:
             embed = discord.Embed(colour=discord.Color.teal())
             i = 1
@@ -81,9 +86,10 @@ class MusicCog(commands.Cog):
                 embed.add_field(name=i, value=son.title, inline=True)
                 i += 1
             await ctx.send(embed=embed)
-        elif query == 'add':
-            await self.songs.put(query)
-            await ctx.send(f"Song [{query}] has been added to queue")
+        elif query == 'add' and song is not None:
+            player = await YoutubeStream.from_url(song, loop=self.client.loop, stream=False)
+            await self.songs.put(player)
+            await ctx.send(f"Song [{player.title}] has been added to queue")
     
     @play.before_invoke
     async def ensure_voice(self, ctx):
