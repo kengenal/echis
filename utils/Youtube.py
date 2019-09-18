@@ -1,3 +1,5 @@
+import asyncio
+
 import requests
 import configparser
 import sys
@@ -49,7 +51,6 @@ class YoutubeStream(discord.PCMVolumeTransformer):
             return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data)
         except discord.HTTPException as error:
             print(error)
-            #logging.error("Youtube stream Error: %s", extra=error)
 
 
 def is_url(query):

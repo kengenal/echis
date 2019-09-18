@@ -1,9 +1,9 @@
 import sys
 import os
-#sys.path.insert(0, os.path.abspath('..'))
 
 import unittest
-from src.lib.Meme import Meme
+from utils.reddit import Meme
+
 
 class MemeTest(unittest.TestCase):
     def setUp(self):
@@ -43,6 +43,7 @@ class MemeTest(unittest.TestCase):
         self.assertNotEqual(status, 200)
         self.assertIsNone(image)
         self.assertIsNone(title)
+
 
 if __name__ == '__main__':
     unittest.main()

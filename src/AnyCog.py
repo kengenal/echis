@@ -3,7 +3,7 @@ import sys
 
 import configparser
 from discord.ext import commands
-from libs.config_loader import config
+from utils.config import config
 from discord.ext.commands import has_permissions
 
 class AnyCog(commands.Cog):

@@ -1,8 +1,9 @@
 import sys
 
-from libs.TerminalColors import TerminalColors
+from utils.TerminalColors import TerminalColors
 
 plugins = dict()
+
 
 def cli(_func=None, *, desc=""):
     def decorator_cli(func):
@@ -10,13 +11,14 @@ def cli(_func=None, *, desc=""):
             "func": func,
             "description": desc
         }
+
     if _func is None:
         return decorator_cli
     else:
         return decorator_cli(_func)
 
 
-def run(plug:dict):
+def run(plug: dict):
     args = sys.argv
     print(len(args))
     if len(args) >= 2:
@@ -24,11 +26,11 @@ def run(plug:dict):
         fun = get["func"]
         fun()
     else:
-        print(TerminalColors.BOLD + "[Commends]" +  TerminalColors.ENDC)
+        print(TerminalColors.BOLD + "[Commends]" + TerminalColors.ENDC)
         print("--------------------")
         for key, val in plug.items():
             des = val["description"]
             if not des:
                 des = None
-            print("  ",key,":" ,des)
+            print("  ", key, ":", des)
         print("--------------------")

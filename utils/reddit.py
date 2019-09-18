@@ -1,6 +1,7 @@
 import requests
 import sys
 
+
 class Meme:
     url = None
     image = None
@@ -25,11 +26,11 @@ class Meme:
             data = r.json()
             json_clear = data[0]['data']['children'][0]['data']
             data = json_clear
-            self.image, self.title, self.status = data['url'], data['title'] , r.status_code        
+            self.image, self.title, self.status = data['url'], data['title'], r.status_code
             return {"status": r.status_code}
         else:
-             return {"status": r.status_code}
-    
+            return {"status": r.status_code}
+
     @property
     def get_all(self):
         return {"title": self.title, "image": self.image, "status": self.status}
@@ -37,7 +38,7 @@ class Meme:
     @property
     def get_title(self):
         return self.title
-    
+
     @property
     def get_image_url(self):
         return self.image
