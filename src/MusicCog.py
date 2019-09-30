@@ -32,7 +32,7 @@ class MusicCog(commands.Cog):
             try:
                 async with ctx.typing():
                     pl = await YoutubeStream.from_url(query, loop=self.client.loop, stream=True)
-                    ctx.voice_client.play(pl, after=lambda e: print('Player error: %s' % e) if e else None)
+                    ctx.voice_client.play(pl, after=lambda e: print('Player _error: %s' % e) if e else None)
                 await ctx.send(f"Now playing{pl.title}")
             except Exception as error:
                 print(error)

@@ -1,14 +1,11 @@
 import unittest
-import sys
-import os
-import random
 
-from utils.nine_gag import NineGagGrab
-from tests.BaseTestCase import BaseTestCase
+from utils.meme import NineGagGrab
+from tests.BaseTestCaseMeme import BaseTestCaseMeme
 
 
+class TestNineGagGrabe(BaseTestCaseMeme):
 
-class TestNineGagGrabe(BaseTestCase):
     def test_get_id_good_link(self):
         nine = NineGagGrab()
         id = nine.get_id(self.link)
@@ -40,26 +37,26 @@ class TestNineGagGrabe(BaseTestCase):
         mem = nine.grab_meme(self.meme_id)
 
         self.assertEqual(mem['id'], 'axz6oYK')
-        self.assertEqual(mem['type'], 'Animations')
+        self.assertEqual(mem['type'], 'gif')
 
     def test_grab_meme_photo(self):
         nine = NineGagGrab()
         mem = nine.grab_meme(self.meme_id_photo)
 
-        self.assertEqual(mem['type'], 'Photo')
+        self.assertEqual(mem['type'], 'image')
 
     def test_status_code(self):
         nine = NineGagGrab()
         mem = nine.grab_meme(self.meme_id)
 
-        self.assertEqual(nine.status_code, 200)
+        self.assertEqual(nine._status_code, 200)
 
     def test_grab_meme(self):
         nine = NineGagGrab()
         mem = nine.grab_meme(self.string)
 
         self.assertEqual(mem, "Meme not found")
-        self.assertEqual(nine.status_code, 404)
+        self.assertEqual(nine._status_code, 404)
 
 
 if __name__ == '__main__':

@@ -15,16 +15,29 @@ TOKEN = config["TOKENS"]["discord"]
 prefix = config["SETTINGS"]["prefix"]
 
 
-@cli(desc="serve discord bot")
-def serve():
+def register_extensions():
+    return [
+        "src.MemeCog",
+        "src.AnyCog",
+        "src.MusicCog"
+    ]
+
+
+def start_bot():
+    ext = register_extensions()
     client = DiscordMultiBot(command_prefix=BOT_PREFIX)
     client.remove_command("help")
     for ext in extensions:
-        #try:
-        client.load_extension(ext)
-        # except Exception as error:
-        #     print(error)
+        try:
+            client.load_extension(ext)
+        except Exception as error:
+            print(error)
     client.run(TOKEN)
+
+
+@cli(desc="serve discord bot")
+def serve():
+    start_bot()
 
 
 @cli(desc="Run unittest")

@@ -1,7 +1,7 @@
 import unittest
-import os
 
-class BaseTestCase(unittest.TestCase):
+
+class BaseTestCaseMeme(unittest.TestCase):
     def setUp(self):
         self.link = 'https://9gag.com/gag/axz6oYK'
         self.meme_id_photo = "aNY6654"
@@ -14,9 +14,3 @@ class BaseTestCase(unittest.TestCase):
         self.bad_url = "https://HelloWorld"
         self.gif = "https://img-9gag-fun.9cache.com/photo/amBEP14_460sv.mp4"
         self.image = "https://img-9gag-fun.9cache.com/photo/amBEgWX_700b.jpg"
-
-
-    def is_exists(self, path):
-        what = os.path.isfile(path)
-        os.remove(path)
-        return what

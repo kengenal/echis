@@ -1,11 +1,9 @@
 import discord
-import sys
 
-import configparser
 from discord.ext import commands
-from utils.reddit import Meme
 from utils.config import config
-from utils.nine_gag import NineGag
+from utils.meme import NineGag, RedditMeme
+
 
 class MemeCog(commands.Cog, name="Memes"):
     def __init__(self, client):
@@ -13,66 +11,46 @@ class MemeCog(commands.Cog, name="Memes"):
         self.config = config()
 
     @commands.command(pass_context=True)
-    async def reddit(self, ctx):
+    async def reddit(self, ctx, what: str = None):
         chan = ctx.message.channel.name
-        if self.config.has_option("URLS", "reddit"):
-            url = self.config["URLS"]["reddit"]
-
-            get = Meme(url)
-            get.run()
-            title = str(get.title)
-            image = get.image
-            channel_name = None
-
-            if self.config.has_option("SETTINGS", "meme"):
-                channel_name = self.config["SETTINGS"]["meme"]
-            if str(chan) == str(channel_name):
-                try:
-                    embed = discord.Embed(title=title, color=discord.Color.dark_blue())
-                    embed.set_image(url=image)
-                    await ctx.send(embed=embed)
-                except Exception as error:
-                    await ctx.send(f"Error : {error}")
-            elif channel_name is None:
-                try:
-                    embed = discord.Embed(title=title, color=discord.Color.dark_blue())
-                    embed.set_image(url=image)
-                    await ctx.send(embed=embed)
-                except Exception as error:
-                    await ctx.send(f"Error : {error}")
+        reddit = RedditMeme()
+        if what is not None:
+            data = reddit.query(query=what, limit=1)
+        else:
+            data = reddit.random(limit=1)
+        channel_name = None
+        if self.config.has_option("SETTINGS", "meme"):
+            channel_name = self.config["SETTINGS"]["meme"]
+        if str(chan) == str(channel_name):
+            try:
+                embed = discord.Embed(title=data[0]["title"], color=discord.Color.dark_blue())
+                embed.set_image(url=data[0]["url"])
+                await ctx.send(embed=embed)
+            except Exception as error:
+                admin = self.config["SETTINGS"]['admin_channel']
+                channel = self.client.get_channel(int(admin))
+                await channel.send(f'Error : {error}')
 
     @commands.command(pass_context=True)
-    async def nine(self, ctx, what:str="hot", range_meme:int=1):
-        if range_meme < 10:
-            range_meme = 10
-        if range_meme > 1:
-            range_meme = 1
-        gag = {}
-        nine = NineGag()
-        if what == "fresh":
-            gag = nine.fresh(range_meme)
-        elif what == "hot":
-            gag = nine.hot(range_meme)
-        elif what == "dark":
-            gag = nine.dark_hot(range_meme)
-        elif what == "dark_fresh":
-            gag = nine.dark_fresh(range_meme)
-        elif what == "poland":
-            gag = nine.poland_hot(range_meme)
-        elif what == "poland_fresh":
-            gag = nine.poland_fresh(range_meme)
-        elif what == "random":
-            gag = nine.random()
-
-        for val in gag:
+    async def nine(self, ctx):
+        chan = ctx.channel.name
+        channel_name = None
+        if self.config.has_option("SETTINGS", "meme"):
+            channel_name = self.config["SETTINGS"]["meme"]
+        if str(chan) == str(channel_name):
             try:
-                embed = discord.Embed(title=val["title"], color=discord.Color.dark_blue())
-                embed.set_image(url=val["url"])
+                nine = NineGag()
+                data = nine.random()
+                embed = discord.Embed(title=data['title'], color=discord.Color.dark_blue())
+                if data['type'] == "img":
+                    embed.set_image(data["url"])
+                else:
+                    embed.add_field(value=data["url"], name="ninegag")
                 await ctx.send(embed=embed)
-                print(val["url"])
-
             except Exception as error:
-                await ctx.send(f"Error : {error}")
+                admin = self.config["SETTINGS"]['admin_channel']
+                channel = self.client.get_channel(int(admin))
+                await channel.send(f'Error : {error}')
 
 
 def setup(client):
