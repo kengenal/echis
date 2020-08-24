@@ -24,4 +24,5 @@ class BotClient(commands.Bot):
         await self.process_commands(message)
 
     async def on_command_error(self, ctx: Context, exception: CommandNotFound):
+        print(exception)
         await ctx.send("Don't do that")
