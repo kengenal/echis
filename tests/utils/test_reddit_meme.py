@@ -1,6 +1,5 @@
-import os
 import unittest
-from utils.meme import RedditMeme
+from echis.utils.meme import RedditMeme
 
 
 class TestRedMemes(unittest.TestCase):
@@ -21,7 +20,7 @@ class TestRedMemes(unittest.TestCase):
         red = RedditMeme()
         parse = red._parse(query="",
                            limit=1,
-                           sort="osime",
+                           sort="osiem",
                            endpoint=self.endpoint_reddit)
 
         self.assertIsNotNone(red.error)
@@ -40,7 +39,6 @@ class TestRedMemes(unittest.TestCase):
         self.assertNotEqual(red.status_code, "500")
         self.assertIsNotNone(red.error)
         self.assertEquals(parse, [])
-
 
 
 if __name__ == "__main__":
