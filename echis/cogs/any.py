@@ -1,38 +1,38 @@
-import discord
-import sys
+import os
 
-import configparser
+import discord
+
 from discord.ext import commands
-from utils.config import config
+
+from echis.utils import mixins
+from echis.utils.config import config
 from discord.ext.commands import has_permissions
 
-class AnyCog(commands.Cog):
-    def __init__(self, client):
-        self.client = client
-        self.config = config()
 
+class AnyCog(mixins.BaseCog):
     @commands.command(pass_context=True)
     async def help(self, ctx):
         author = ctx.message.author
         embed = discord.Embed(colour=discord.Color.blue())
         embed.set_author(name="Help - Commands")
-        for key in self.config["HELP"]:
-            embed.add_field(name=f"!{key}", value=self.config["HELP"][key], inline=True)
+        conf = config()
+        for key in conf["HELP"]:
+            embed.add_field(name=f"!{key}", value=conf["HELP"][key], inline=True)
         await ctx.send(author, embed=embed)
 
     @commands.command(pass_context=True)
-    async def report(self, ctx, id:int = None, description: str = None):
+    async def report(self, ctx, id: int = None, description: str = None):
         if id is not None and description is not None:
             description = str(description)
             author = ctx.message.author.name
             name = self.client.get_user(id)
-            channel = self.config["SETTINGS"]["admin_channel"]
+            channel = os.getenv("ADMIN_CHANNEL")
             chan = discord.utils.get(self.client.get_all_channels(), name=channel)
             embed = discord.Embed(olour=discord.Color.red())
             embed.set_author(name="Report")
-            embed.add_field(name=f"User {author}: send report to {name} : {id}", 
+            embed.add_field(name=f"User {author}: send report to {name} : {id}",
                             value=description, inline=True
-                        )
+                            )
             await ctx.send("Report has been sended")
             chan = self.client.get_channel(int(chan.id))
             await chan.send(embed=embed)
@@ -41,17 +41,15 @@ class AnyCog(commands.Cog):
 
     @commands.command()
     @has_permissions(administrator=True)
-    async def find(self, ctx, id:int):
-        if self.config.has_option("SETTINGS", "admin_channel"):
-            chan  = ctx.message.channel.name
-            # chan = ctx.message.channel.id
-            channel_name = self.config["SETTINGS"]["admin_channel"]
-            if str(chan) == str(channel_name):
-                if id:
-                    name = self.client.get_user(id)
-                    await ctx.send(f"Name: {name}")
-                else:
-                    await ctx.send("You are not server administrator")
+    async def find(self, ctx, id: int):
+        chan = ctx.message.channel.name
+        channel_name = os.getenv("ADMIN_CHANNEL")
+        if str(chan) == str(channel_name):
+            if id:
+                name = self.client.get_user(id)
+                await ctx.send(f"Name: {name}")
+            else:
+                await ctx.send("Admin channel not found")
 
 
 def setup(client):

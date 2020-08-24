@@ -1,5 +1,7 @@
-# Echis - discord bot
-Discord bot written in python using discordpy lib
+===================
+Echis - discord bot
+===================
+
 
 ## features
 * play music

@@ -21,7 +21,6 @@ class Meme:
             r = requests.get(self.url, headers={'User-agent': 'your bot 0.1'})
         except:
             return "Request fail, check url"
-            sys.exit()
         if r.status_code == 200:
             data = r.json()
             json_clear = data[0]['data']['children'][0]['data']
