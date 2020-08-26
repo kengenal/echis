@@ -3,7 +3,7 @@ import sys
 from typing import List
 
 
-from echis.cogs.main import BotClient
+from echis.main.main import BotClient
 
 from echis.utils.config import config
 
@@ -11,7 +11,7 @@ from echis.utils.config import config
 def get_extensions() -> List[str]:
     return [
         "meme",
-        "any",
+        "report",
         "music",
         "new_member",
     ]
@@ -25,7 +25,7 @@ def start_bot():
     if not TOKEN or not BOT_PREFIX:
         sys.exit("Token not found")
     client = BotClient(command_prefix=BOT_PREFIX)
-    client.remove_command("help")
+    # client.remove_command("help")
     for ext in get_extensions():
         try:
             client.load_extension(f"{MODULE_NAME}.cogs.{ext}")
