@@ -1,7 +1,8 @@
 import os
+import discord
 
 from discord.ext import commands
-from discord.ext.commands import Context
+from discord.ext.commands import Context, command
 
 from echis.utils import mixins
 from echis.utils.Youtube import YoutubeStream
@@ -9,30 +10,50 @@ from echis.utils.Youtube import YoutubeStream
 
 class MusicCog(mixins.BaseCog):
 
-    @commands.command()
-    async def play(self, ctx: Context, query: str):
+    @command()
+    async def play(self, ctx: Context, *args: str):
+        query = ' '.join(args)
         if query:
             async with ctx.typing():
-                pl = await YoutubeStream.from_url(query, loop=self.client.loop, stream=True)
-                ctx.voice_client.play(pl, after=lambda e: print('Player _error: %s' % e) if e else None)
-            await ctx.send(f"Now playing{pl.title}")
-
+                player = await YoutubeStream.from_url(query,
+                                                      loop=self.client.loop, stream=True)
+                ctx.voice_client.play(player,
+                                      after=lambda e: print('Player _error: %s' % e))
+                return await ctx.send(f"Now playing {player.title}")
         else:
-            await ctx.send(f"Take song name")
+            return await ctx.send(f"Take song name")
 
-    @commands.command()
-    async def volume(self, ctx: Context, volume: int):
+    @command()
+    async def volume(self, ctx: Context, volume: int = None):
+        """ Change volume  0 - 100 'volume 50' """
         name = os.getenv("BOT_NAME")
+        if not volume:
+            return await ctx.send(f"volume : {int(ctx.voice_client.source.volume * 100) / 100}")
         if ctx.voice_client is None:
             return await ctx.send(f"{name} is not connected")
-        if volume > 1000:
-            volume = 1000
+        if volume > 100:
+            volume = 100
         ctx.voice_client.source.volume = volume / 100
-        await ctx.send(f"Changed volume to {volume}")
+        return await ctx.send(f"Changed volume to {volume}/100")
 
-    @commands.command()
+    @command()
     async def stop(self, ctx: Context):
         await ctx.voice_client.disconnect()
+
+    @play.before_invoke
+    async def ensure_voice(self, ctx):
+        if ctx.voice_client is None:
+            if ctx.author.voice:
+                try:
+                    channel = ctx.author.voice.channel
+                    await channel.connect()
+                except discord.errors.ClientException as error:
+                    print(error)
+            else:
+                await ctx.send("You are not connected to a voice channel.")
+                raise commands.CommandError("Author not connected to a voice channel.")
+        elif ctx.voice_client.is_playing():
+            ctx.voice_client.stop()
 
 
 def setup(client):
