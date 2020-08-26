@@ -2,16 +2,16 @@ import os
 
 import discord
 
-from discord.ext import commands
-from discord.ext.commands import Context
+from discord.ext.commands import Context, command
 
 from echis.utils import mixins
 from echis.utils.meme import RedditMeme
 
 
-class MemeCog(mixins.BaseCog, name="Memes"):
-    @commands.command(pass_context=True)
+class Meme(mixins.BaseCog, name="Memes"):
+    @command(pass_context=True)
     async def meme(self, ctx: Context, what: str = None):
+        """ send random meme from reddit, you can add parameter like !meme dark-meme """
         chan = ctx.message.channel.name
         reddit = RedditMeme()
         if what is not None:
@@ -31,4 +31,4 @@ class MemeCog(mixins.BaseCog, name="Memes"):
 
 
 def setup(client):
-    client.add_cog(MemeCog(client))
+    client.add_cog(Meme(client))

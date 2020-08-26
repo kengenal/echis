@@ -8,10 +8,11 @@ from echis.utils import mixins
 from echis.utils.Youtube import YoutubeStream
 
 
-class MusicCog(mixins.BaseCog):
+class Music(mixins.BaseCog):
 
     @command()
     async def play(self, ctx: Context, *args: str):
+        """ play music from youtube you first you need connect to voice channel """
         query = ' '.join(args)
         if query:
             async with ctx.typing():
@@ -25,7 +26,7 @@ class MusicCog(mixins.BaseCog):
 
     @command()
     async def volume(self, ctx: Context, volume: int = None):
-        """ Change volume  0 - 100 'volume 50' """
+        """ Change volume  0 - 100 """
         name = os.getenv("BOT_NAME")
         if not volume:
             return await ctx.send(f"volume : {int(ctx.voice_client.source.volume * 100) / 100}")
@@ -38,6 +39,7 @@ class MusicCog(mixins.BaseCog):
 
     @command()
     async def stop(self, ctx: Context):
+        """ stop playing music """
         await ctx.voice_client.disconnect()
 
     @play.before_invoke
@@ -57,4 +59,4 @@ class MusicCog(mixins.BaseCog):
 
 
 def setup(client):
-    client.add_cog(MusicCog(client))
+    client.add_cog(Music(client))
