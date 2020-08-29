@@ -2,10 +2,7 @@ import os
 import sys
 from typing import List
 
-
 from echis.main.main import BotClient
-
-from echis.utils.config import config
 
 
 def get_extensions() -> List[str]:
