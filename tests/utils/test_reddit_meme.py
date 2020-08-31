@@ -1,45 +1,65 @@
-import unittest
+from unittest.mock import patch, MagicMock
+
+import pytest
+
 from echis.utils.meme import RedditMeme
 
 
-class TestRedMemes(unittest.TestCase):
-    def setUp(self):
-        self.endpoint_reddit = "https://www.reddit.com/r/memes/search.json"
-
-    def test_parse(self):
-        red = RedditMeme()
-        parse = red._parse(query="dark meme",
-                           limit=1,
-                           sort="hot",
-                           endpoint=self.endpoint_reddit)
-
-        self.assertNotEqual(parse[0]["title"], [])
-        self.assertNotEqual(parse[0]["url"], [])
-
-    def test_parse_error(self):
-        red = RedditMeme()
-        parse = red._parse(query="",
-                           limit=1,
-                           sort="osiem",
-                           endpoint=self.endpoint_reddit)
-
-        self.assertIsNotNone(red.error)
-        self.assertNotEqual(red.status_code, "404")
-        self.assertEquals(red.error, "Not found")
-        self.assertEquals(parse, [])
-
-    def test_parse_connection_error(self):
-        red = RedditMeme()
-        parse = red._parse(query="dark humor",
-                           limit=1,
-                           sort="hot",
-                           endpoint="https://random-string")
-
-        self.assertIsNotNone(red.error)
-        self.assertNotEqual(red.status_code, "500")
-        self.assertIsNotNone(red.error)
-        self.assertEquals(parse, [])
+@pytest.fixture(scope="module")
+def reddit() -> RedditMeme:
+    return RedditMeme()
 
 
-if __name__ == "__main__":
-    unittest.main()
+VALUE = [{"data": {
+    "title": "test",
+    "url": "test.com/image",
+    "score": 5550,
+    "author_fullname": "test",
+    "post_hint": "img",
+}}]
+
+
+@patch.object(RedditMeme, 'query', return_value=VALUE)
+def test_random_meme(mock: MagicMock, reddit: RedditMeme):
+    assert 'title' in reddit.random[0]
+    assert reddit.random[0]['title'] == "test"
+
+
+@patch.object(RedditMeme, 'query', return_value=VALUE)
+def test_hot_meme(mock: MagicMock, reddit: RedditMeme):
+    assert 'title' in reddit.hot[0]
+    assert reddit.hot[0]['title'] == "test"
+
+
+@patch.object(RedditMeme, 'query', return_value=VALUE)
+def test_fresh_meme(mock: MagicMock, reddit: RedditMeme):
+    assert 'title' in reddit.hot[0]
+    assert reddit.hot[0]['title'] == "test"
+
+
+@patch.object(RedditMeme, 'query', return_value=[{}])
+def test_random_meme_empty_value(mock: MagicMock, reddit: RedditMeme):
+    with pytest.raises(Exception) as exception_meme:
+        _ = reddit.random
+        assert exception_meme.value == "Problem with downloading meme"
+
+
+@patch.object(RedditMeme, 'query', return_value=[{}])
+def test_random_meme_empty_value(mock: MagicMock, reddit: RedditMeme):
+    with pytest.raises(Exception) as exception_meme:
+        _ = reddit.random
+        assert exception_meme.value == "Problem with downloading meme"
+
+
+@patch.object(RedditMeme, 'query', return_value=[{}])
+def test_hot_meme_empty_value(mock: MagicMock, reddit: RedditMeme):
+    with pytest.raises(Exception) as exception_meme:
+        _ = reddit.hot
+        assert exception_meme.value == "Problem with downloading meme"
+
+
+@patch.object(RedditMeme, 'query', return_value=[{}])
+def test_fresh_meme_empty_value(mock: MagicMock, reddit: RedditMeme):
+    with pytest.raises(Exception) as exception_meme:
+        _ = reddit.fresh
+        assert exception_meme.value == "Problem with downloading meme"

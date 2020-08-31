@@ -15,7 +15,7 @@ class Meme(mixins.BaseCog, name="Memes"):
         chan = ctx.message.channel.name
         reddit = RedditMeme()
         if what is not None:
-            data = reddit.query(query=what, limit=1)
+            data = reddit.by_query(query=what, limit=1)
         else:
             data = reddit.random(limit=1)
         channel_name = None
