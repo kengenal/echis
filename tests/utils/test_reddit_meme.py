@@ -41,25 +41,7 @@ def test_fresh_meme(mock: MagicMock, reddit: RedditMeme):
 def test_random_meme_empty_value(mock: MagicMock, reddit: RedditMeme):
     with pytest.raises(Exception) as exception_meme:
         _ = reddit.random
-        assert exception_meme.value == "Problem with downloading meme"
-
-
-@patch.object(RedditMeme, 'query', return_value=[{}])
-def test_random_meme_empty_value(mock: MagicMock, reddit: RedditMeme):
-    with pytest.raises(Exception) as exception_meme:
-        _ = reddit.random
-        assert exception_meme.value == "Problem with downloading meme"
-
-
-@patch.object(RedditMeme, 'query', return_value=[{}])
-def test_hot_meme_empty_value(mock: MagicMock, reddit: RedditMeme):
-    with pytest.raises(Exception) as exception_meme:
         _ = reddit.hot
-        assert exception_meme.value == "Problem with downloading meme"
-
-
-@patch.object(RedditMeme, 'query', return_value=[{}])
-def test_fresh_meme_empty_value(mock: MagicMock, reddit: RedditMeme):
-    with pytest.raises(Exception) as exception_meme:
         _ = reddit.fresh
         assert exception_meme.value == "Problem with downloading meme"
+
