@@ -2,10 +2,7 @@ import os
 
 import discord
 
-from discord.ext import commands
-
 from echis.utils import mixins
-from echis.utils.config import config
 from discord.ext.commands import has_permissions, command
 
 
@@ -34,9 +31,9 @@ class Report(mixins.BaseCog):
     @has_permissions(administrator=True)
     async def find(self, ctx, user_id: int):
         """ you can find user if have admin permission, takes user id  """
-        chan = ctx.message.channel.name
+        current_channel = ctx.message.channel.name
         channel_name = os.getenv("ADMIN_CHANNEL")
-        if str(chan) == str(channel_name):
+        if str(current_channel) == str(channel_name):
             if id:
                 name = self.client.get_user(user_id)
                 await ctx.send(f"Name: {name}")
