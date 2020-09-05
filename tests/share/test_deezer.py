@@ -1,12 +1,11 @@
-import unittest
 from typing import Dict
 
 import pytest
 import requests
 from _pytest.monkeypatch import MonkeyPatch
-from dotenv import load_dotenv
 
 from echis.share.deezer import Deezer, Share, Spotify
+from echis.utils.token_authorization import SpotifyAuthorization
 
 
 class MockResponseWithData:
@@ -124,7 +123,7 @@ def mock_with_data(*args, **kwargs) -> MockResponseWithData:
 
 
 def test_deezer_with_get_last_from_deezer(monkeypatch: MonkeyPatch, deezer: Deezer):
-    def mock_get(*args, **kwargs):
+    def mock_get(*args, **kwargs) -> MockResponseWithData:
         return MockResponseWithData()
 
     monkeypatch.setattr(requests, "get", mock_get)
@@ -138,6 +137,11 @@ def test_deezer_with_get_last_from_deezer(monkeypatch: MonkeyPatch, deezer: Deez
 
 def test_get_latest_with_no_return_data_from_deezer(monkeypatch: MonkeyPatch, deezer: Deezer):
     monkeypatch.setattr(requests, "get", mock_get_empty_data)
+
+    def mock_token(*args, **kwargs) -> str:
+        return "123"
+
+    monkeypatch.setattr(SpotifyAuthorization, "get_token", mock_token)
     with pytest.raises(Exception) as exception_meme:
         deezer.fetch(playlist_id=45489721)
         _ = deezer.get_latest
@@ -145,11 +149,15 @@ def test_get_latest_with_no_return_data_from_deezer(monkeypatch: MonkeyPatch, de
 
 
 def test_get_lasted_with_data_from_spotify(monkeypatch, spotify):
-    def mock_get(*args, **kwargs):
+    def mock_get(*args, **kwargs) -> MockSpotifyData:
         return MockSpotifyData()
 
+    def mock_token(*args, **kwargs):
+        return "123"
+
+    monkeypatch.setattr(SpotifyAuthorization, "get_token", mock_token)
     monkeypatch.setattr(requests, "get", mock_get)
-    spotify.fetch(playlist_id="sdij9iuqsajhd", token="token")
+    spotify.fetch(playlist_id="sdij9iuqsajhd")
     last = spotify.get_latest
 
     assert last.title is not None
@@ -163,4 +171,3 @@ def test_get_latest_with_no_return_data_from_spotify(monkeypatch, spotify):
         spotify.fetch(playlist_id="sdij9iuqsajhd", token="random token")
         _ = deezer.get_latest
         assert exception_meme.value == "Cannot download playlist"
-

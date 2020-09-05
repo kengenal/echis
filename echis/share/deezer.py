@@ -1,11 +1,12 @@
-import base64
 import os
+import requests
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Dict, List, Optional
 
-import requests
+from echis.utils.token_authorization import SpotifyAuthorization
 
 
 @dataclass
@@ -21,18 +22,11 @@ class Share:
     added_by: str
 
 
-@dataclass
-class TokenContext:
-    token: str
-    token_type: str
-    expires_in: timedelta
-
-
 class AbstractShare(ABC):
     playlist: List[Share]
 
     @abstractmethod
-    def fetch(self, playlist_id, token: Optional['str'] = None):
+    def fetch(self, playlist_id):
         pass
 
     @property
@@ -72,13 +66,16 @@ class Deezer(AbstractShare):
 
 class Spotify(AbstractShare):
     def __init__(self):
-        self.token = TokenContext(token="", expires_in=timedelta, token_type="")
+        client_id = os.getenv("SPOTIFY_CLIENT_ID")
+        client_sercet = os.getenv("SPOTIFY_CLIENT_SECRET")
+        self.token = SpotifyAuthorization(client_id=client_id, client_secret=client_sercet)
 
-    def fetch(self, playlist_id: str, token: Optional[str] = None, limit: int = 1):
+    def fetch(self, playlist_id: str, limit: int = 1):
         playlists: Optional[Dict]
         rq = None
         market = os.getenv('SPOTIFY_MARKET')
         try:
+            token = self.get_token()
             headers = {
                 "Authorization": f"Bearer {token}"
             }
@@ -107,3 +104,9 @@ class Spotify(AbstractShare):
                     added_by=playlist["added_by"]["id"]
                 ))
         self.playlist = songs
+
+    def get_token(self) -> str:
+        if self.token.is_active:
+            return self.token.token
+        self.token.get_token()
+        return self.token.token
