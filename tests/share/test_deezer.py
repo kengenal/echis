@@ -54,14 +54,14 @@ class MockSpotifyData:
                 {
                     "added_at": "2017-09-01T13:46:42Z",
                     "added_by": {
-                        "id": "kengenal"
+                        "id": "test"
                     },
                     "track": {
                         "album": {
                             "artists": [
                                 {
-                                    "id": "2gK2vUsncaH9nrI7gQIYH5",
-                                    "name": "Echoes The Fall"
+                                    "id": "dfasd2q1asda",
+                                    "name": "test"
                                 }
                             ],
                             "id": "6gLBQlOZ3j7SND5BLbLkT7",
@@ -72,15 +72,15 @@ class MockSpotifyData:
                                     "width": 640
                                 }
                             ],
-                            "name": "Echoes The Fall"
+                            "name": "test"
                         },
                         "artists": [
                             {
-                                "id": "2gK2vUsncaH9nrI7gQIYH5",
-                                "name": "Echoes The Fall"
+                                "id": "asdasfwzs das",
+                                "name": "test"
                             }
                         ],
-                        "id": "3w0gPebgY2Yrkedw9cpbVe",
+                        "id": "asdagasddar213124",
                         "name": "This Is Not Goodbye",
                         "popularity": 42
                     }
@@ -168,6 +168,6 @@ def test_get_lasted_with_data_from_spotify(monkeypatch, spotify):
 def test_get_latest_with_no_return_data_from_spotify(monkeypatch, spotify):
     monkeypatch.setattr(requests, "get", mock_get_empty_data)
     with pytest.raises(Exception) as exception_meme:
-        spotify.fetch(playlist_id="sdij9iuqsajhd", token="random token")
+        spotify.fetch(playlist_id="sdij9iuqsajhd")
         _ = deezer.get_latest
         assert exception_meme.value == "Cannot download playlist"
