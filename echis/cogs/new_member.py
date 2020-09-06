@@ -3,7 +3,7 @@ import os
 from discord.ext.commands import Context, command
 from discord.utils import get
 
-from echis.utils import mixins
+from echis.modules import mixins
 
 
 class NewMember(mixins.BaseCog):

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Dict, List, Optional
 
-from echis.utils.token_authorization import SpotifyAuthorization
+from echis.modules.token_authorization import SpotifyAuthorization
 
 
 @dataclass
@@ -26,7 +26,7 @@ class AbstractShare(ABC):
     playlist: List[Share]
 
     @abstractmethod
-    def fetch(self, playlist_id):
+    def fetch(self, playlist_id, limit: int = 1):
         pass
 
     @property
@@ -35,9 +35,12 @@ class AbstractShare(ABC):
             return sorted(self.playlist, key=lambda x: x.added_to_playlist, reverse=True)[0]
         return None
 
+    def is_exists(self, song_id: str) -> bool:
+        return True if [x for x in self.playlist if x.id == song_id] else False
+
 
 class Deezer(AbstractShare):
-    def fetch(self, playlist_id: int, token: Optional[str] = None):
+    def fetch(self, playlist_id: int, limit: int = 1):
         playlists: Optional[Dict]
         try:
             rq = requests.get(f"https://api.deezer.com/playlist/{playlist_id}").json()
@@ -110,3 +113,12 @@ class Spotify(AbstractShare):
             return self.token.token
         self.token.get_token()
         return self.token.token
+
+
+def get_client(name: str) -> AbstractShare:
+    name_clear = name.strip().lower()
+    client = {
+        "spotify": Spotify,
+        "deezer": Deezer
+    }
+    return client.get(name_clear, Deezer)

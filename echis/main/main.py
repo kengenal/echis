@@ -5,7 +5,7 @@ from discord import Message
 from discord.ext import commands
 from discord.ext.commands import Context, CommandNotFound
 
-from echis.utils.filter import is_bad_word
+from echis.modules.filter import is_bad_word
 
 
 class BotClient(commands.Bot):

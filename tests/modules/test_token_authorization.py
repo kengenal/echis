@@ -3,7 +3,7 @@ from typing import Dict
 import pytest
 import requests
 
-from echis.utils.token_authorization import SpotifyAuthorization
+from echis.modules.token_authorization import SpotifyAuthorization
 
 
 class MockTokenFromSpotify:

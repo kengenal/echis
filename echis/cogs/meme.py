@@ -4,8 +4,8 @@ import discord
 
 from discord.ext.commands import Context, command
 
-from echis.utils import mixins
-from echis.utils.meme import RedditMeme
+from echis.modules import mixins
+from echis.modules.meme import RedditMeme
 
 
 class Meme(mixins.BaseCog, name="Meme"):

@@ -1,7 +1,7 @@
 import os
 import pytest
 
-from echis.utils.filter import is_bad_word
+from echis.modules.filter import is_bad_word
 
 
 @pytest.fixture()
