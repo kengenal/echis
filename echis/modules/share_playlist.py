@@ -11,7 +11,7 @@ from echis.modules.token_authorization import SpotifyAuthorization
 
 @dataclass
 class Share:
-    id: str
+    song_id: str
     title: str
     rank: str
     artist: str
@@ -20,10 +20,11 @@ class Share:
     playlist_id: str
     added_to_playlist: str
     added_by: str
+    api: str
 
 
 class AbstractShare(ABC):
-    playlist: List[Share]
+    playlists: List[Share]
 
     @abstractmethod
     def fetch(self, playlist_id, limit: int = 1):
@@ -31,19 +32,28 @@ class AbstractShare(ABC):
 
     @property
     def get_latest(self) -> Optional[Share]:
-        if self.playlist:
-            return sorted(self.playlist, key=lambda x: x.added_to_playlist, reverse=True)[0]
+        if self.playlists:
+            return self.playlists[0]
         return None
 
-    def is_exists(self, song_id: str) -> bool:
-        return True if [x for x in self.playlist if x.id == song_id] else False
+    @abstractmethod
+    def playlist_is_exists(self, playlist_id: str):
+        pass
+
+
+class TokenRequired(ABC):
+    @abstractmethod
+    def get_token(self) -> str:
+        pass
 
 
 class Deezer(AbstractShare):
+    url: str = "https://api.deezer.com/playlist/{}"
+
     def fetch(self, playlist_id: int, limit: int = 1):
         playlists: Optional[Dict]
         try:
-            rq = requests.get(f"https://api.deezer.com/playlist/{playlist_id}").json()
+            rq = requests.get(self.url.format(playlist_id)).json()
             playlists = rq["tracks"]["data"]
         except KeyError:
             raise Exception("Cannot download playlist")
@@ -54,7 +64,7 @@ class Deezer(AbstractShare):
             for playlist in playlists:
                 timestamp = datetime.fromtimestamp(playlist["time_add"])
                 songs.append(Share(
-                    id=str(playlist["id"]),
+                    song_id=str(playlist["id"]),
                     title=playlist["title"],
                     rank=playlist["rank"],
                     artist=playlist["artist"]["name"],
@@ -62,30 +72,39 @@ class Deezer(AbstractShare):
                     album=playlist["album"]["title"],
                     playlist_id=str(rq["id"]),
                     added_to_playlist=timestamp.strftime('%Y-%m-%d %H:%M:%S'),
-                    added_by=rq["creator"]["name"]
+                    added_by=rq["creator"]["name"],
+                    api="deezer"
                 ))
-        self.playlist = songs
+        sorted_songs = sorted(self.playlists, key=lambda x: x.added_to_playlist, reverse=True)
+        self.playlists = sorted_songs
+
+    def playlist_is_exists(self, playlist_id: str) -> bool:
+        try:
+            rq = requests.get(self.url.format(playlist_id))
+            if "error" in rq.json():
+                return False
+            return True
+        except ConnectionError as error:
+            raise ConnectionError(error)
 
 
-class Spotify(AbstractShare):
+class Spotify(AbstractShare, TokenRequired):
     def __init__(self):
         client_id = os.getenv("SPOTIFY_CLIENT_ID")
-        client_sercet = os.getenv("SPOTIFY_CLIENT_SECRET")
-        self.token = SpotifyAuthorization(client_id=client_id, client_secret=client_sercet)
+        client_secret = os.getenv("SPOTIFY_CLIENT_SECRET")
+        self.token = SpotifyAuthorization(client_id=client_id, client_secret=client_secret)
+        self.url = "https://api.spotify.com/v1/playlists/{}/tracks?&limit={}&market={" \
+                   "}&fields=artist%3Btitle%3Bimages%3Bid%3Bpopularity%3Bname%3Badded_at& "
 
     def fetch(self, playlist_id: str, limit: int = 1):
         playlists: Optional[Dict]
-        rq = None
         market = os.getenv('SPOTIFY_MARKET')
         try:
             token = self.get_token()
             headers = {
                 "Authorization": f"Bearer {token}"
             }
-            rq = requests.get(
-                f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks?&limit={limit}&market={market}&fields=artist"
-                f"%3Btitle%3Bimages%3Bid%3Bpopularity%3Bname%3Badded_at&",
-                headers=headers).json()
+            rq = requests.get(self.url.format(playlist_id, limit, market) ,headers=headers).json()
             playlists = rq["items"]
         except KeyError:
             raise Exception("Cannot download playlist")
@@ -96,7 +115,7 @@ class Spotify(AbstractShare):
         if rq and playlists:
             for playlist in playlists:
                 songs.append(Share(
-                    id=str(playlist["track"]["id"]),
+                    song_id=str(playlist["track"]["id"]),
                     artist=playlist['track']["album"]["artists"][0]["name"],
                     title=playlist["track"]["id"],
                     cover=[x for x in playlist["track"]["album"]["images"] if x['height'] == 640][0],
@@ -104,21 +123,26 @@ class Spotify(AbstractShare):
                     album=playlist["track"]["album"]["name"],
                     playlist_id=str(playlist["track"]["album"]["id"]),
                     added_to_playlist=playlist["added_at"],
-                    added_by=playlist["added_by"]["id"]
+                    added_by=playlist["added_by"]["id"],
+                    api="spotify"
                 ))
-        self.playlist = songs
+        self.playlists = songs
+
+    def playlist_is_exists(self, playlist_id: str):
+        try:
+            token = self.get_token()
+            headers = {
+                "Authorization": f"Bearer {token}"
+            }
+            rq = requests.get(self.url.format(playlist_id, 1, "EN"), headers=headers)
+            if "error" in rq.json():
+                return False
+            return True
+        except ConnectionError as error:
+            raise ConnectionError(error)
 
     def get_token(self) -> str:
         if self.token.is_active:
             return self.token.token
         self.token.get_token()
         return self.token.token
-
-
-def get_client(name: str) -> AbstractShare:
-    name_clear = name.strip().lower()
-    client = {
-        "spotify": Spotify,
-        "deezer": Deezer
-    }
-    return client.get(name_clear, Deezer)

@@ -30,7 +30,7 @@ class MockResponseWithData:
                         },
                         "album": {
                             "id": "8310422",
-                            "title": "Breaking The Model",
+                            "title": "Breaking The model",
                             "cover_medium": "https://e-cdns-images.dzcdn.net/images/cover"
                                             "/5bf40e45c5aba44a00c6afe697b0a5b9/250x250-000000-80-0-0.jpg "
                         }
@@ -104,6 +104,18 @@ class MockTokenFromSpotify:
         return 200
 
 
+class PlaylistNotFoundMock:
+    @staticmethod
+    def json() -> Dict:
+        return {"error": {"status": 404}}
+
+
+class PlaylistExistMock:
+    @staticmethod
+    def json() -> Dict:
+        return {"random_playlist": {"status": 200}}
+
+
 @pytest.fixture()
 def deezer() -> Deezer:
     return Deezer()
@@ -136,7 +148,7 @@ def test_deezer_with_get_last_from_deezer(monkeypatch: MonkeyPatch, deezer: Deez
     last = deezer.get_latest
 
     assert last.title is not None
-    assert last.id is not None
+    assert last.song_id is not None
     assert isinstance(last, Share)
 
 
@@ -149,15 +161,18 @@ def test_get_latest_with_no_return_data_from_deezer(monkeypatch: MonkeyPatch, de
         assert exception_meme.value == "Cannot download playlist"
 
 
-@pytest.mark.parametrize("song_id, expect", [
-    ("82740060", True),
-    ("ssadas", False)
-])
-def test_is_exists_for_deezer_class(monkeypatch: MonkeyPatch, deezer: Deezer, song_id: str, expect: bool):
-    monkeypatch.setattr(requests, "get", mock_with_data)
-    deezer.fetch(playlist_id=45489721)
+@pytest.mark.parametrize("take, expect", (
+        [PlaylistNotFoundMock(), False],
+        [PlaylistExistMock(), True]
+))
+def test_deezer_check_playlist_for_deezer(monkeypatch: MonkeyPatch, deezer: Deezer, take, expect):
+    def get_mock(*args, **kwargs):
+        return take
 
-    assert deezer.is_exists(song_id=song_id) == expect
+    monkeypatch.setattr(requests, "get", get_mock)
+    is_exist = deezer.playlist_is_exists("908622995")
+
+    assert is_exist is expect
 
 
 def test_get_lasted_with_data_from_spotify(monkeypatch: MonkeyPatch, spotify: Spotify):
@@ -167,7 +182,7 @@ def test_get_lasted_with_data_from_spotify(monkeypatch: MonkeyPatch, spotify: Sp
     last = spotify.get_latest
 
     assert last.title is not None
-    assert last.id is not None
+    assert last.song_id is not None
     assert isinstance(last, Share)
 
 
@@ -179,13 +194,16 @@ def test_get_latest_with_no_return_data_from_spotify(monkeypatch: MonkeyPatch, s
         assert exception_meme.value == "Cannot download playlist"
 
 
-@pytest.mark.parametrize("song_id, expect", [
-    ("asdagasddar213124", True),
-    ("kmnsdfoisandoiasnd", False)
-])
-def test_is_exists_for_sporify_class(monkeypatch: MonkeyPatch, spotify: Spotify, song_id: str, expect: bool):
-    monkeypatch.setattr(SpotifyAuthorization, "get_token", mock_token)
-    monkeypatch.setattr(requests, "get", mock_spotify_get_with_data)
-    spotify.fetch(playlist_id="sdij9iuqsajhd")
+@pytest.mark.parametrize("take, expect", (
+        [PlaylistNotFoundMock(), False],
+        [PlaylistExistMock(), True]
+))
+def test_deezer_check_playlist_for_spotify(monkeypatch: MonkeyPatch, spotify: Spotify, take, expect):
+    def get_mock(*args, **kwargs):
+        return take
 
-    assert spotify.is_exists(song_id=song_id) == expect
+    monkeypatch.setattr(requests, "get", get_mock)
+    monkeypatch.setattr(SpotifyAuthorization, "get_token", mock_token)
+    is_exist = spotify.playlist_is_exists("908622995")
+
+    assert is_exist is expect
