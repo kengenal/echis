@@ -2,7 +2,7 @@ import os
 
 import discord
 
-from echis.utils import mixins
+from echis.modules import mixins
 from discord.ext.commands import has_permissions, command
 
 

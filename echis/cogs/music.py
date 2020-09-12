@@ -4,8 +4,8 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import Context, command
 
-from echis.utils import mixins
-from echis.utils.youtube import YoutubeStream
+from echis.modules import mixins
+from echis.modules.youtube import YoutubeStream
 
 
 class Music(mixins.BaseCog):

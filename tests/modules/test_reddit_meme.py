@@ -2,7 +2,7 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
-from echis.utils.meme import RedditMeme
+from echis.modules.meme import RedditMeme
 
 
 @pytest.fixture(scope="module")
