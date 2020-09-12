@@ -18,11 +18,11 @@ def get_interface(name: str) -> AbstractShare:
 
 
 class SharedSongs(me.Document):
-    record_id = me.UUIDField(default=uuid.uuid4(), unique=True, required=False)
+    record_id = me.UUIDField(default=uuid.uuid4(), required=False)
     title = me.StringField(required=False)
     rank = me.IntField(required=True)
-    song_id = me.StringField(required=False)
-    title = me.StringField(required=False)
+    song_id = me.StringField(required=True)
+    title = me.StringField(required=True)
     artist = me.StringField(required=False)
     cover = me.StringField(required=False)
     album = me.StringField(required=True)
@@ -34,17 +34,21 @@ class SharedSongs(me.Document):
     is_shared = me.BooleanField(default=False)
 
     @staticmethod
-    def fetch_playlist(client: AbstractShare) -> Optional[List[Share]]:
+    def fetch_playlist() -> Optional[List[Share]]:
         get_playlists: List[Playlists] = Playlists.objects
         songs: List[Share] = []
         for playlist in get_playlists:
+            client = get_interface(playlist.api)
             client.fetch(playlist_id=playlist.playlist_id)
             latest: Share = client.get_latest
-            is_exists = SharedSongs.objects(song_id=latest.song_id, api=playlist.api).count()
-            if not is_exists:
-                create = SharedSongs(**asdict(latest))
-                create.save()
-                songs.append(latest)
+            latest.added_by = playlist.user
+            if latest:
+                is_exists = SharedSongs.objects(song_id=latest.song_id, api=latest.api).count()
+                if not is_exists:
+                    create = SharedSongs(**asdict(latest))
+                    create.is_shared = True
+                    create.save()
+                    songs.append(latest)
         return songs
 
 
@@ -57,20 +61,24 @@ class Playlists(me.Document):
     created_at = me.DateTimeField(default=datetime.utcnow)
 
     @staticmethod
-    def add_playlist(playlist_id: str, user: str, api: str) -> bool:
+    def add_playlist(playlist_id: str, username: str, api: str) -> str:
         is_exist = Playlists.objects(playlist_id=playlist_id).count()
         if not is_exist:
             client = get_interface(api)
             playlist_resolve = client.playlist_is_exists(playlist_id)
             if playlist_resolve:
-                new_playlist = Playlists(playlist_id=playlist_id, user_name=user, api=api)
+                new_playlist = Playlists(playlist_id=playlist_id, user=username, api=api)
                 new_playlist.save()
-            return playlist_resolve
+                return "Success, playlist has been added"
+            else:
+                return "Error, playlist not found"
+        else:
+            return "Error, playlist already exists"
 
     @staticmethod
-    def remove_playlist(playlist_id: str, user: str, api: str) -> bool:
-        playlist = Playlists.objects(playlist_id=playlist_id, user=user, api=api).first()
+    def remove_playlist(playlist_id: str, username: str, api: str) -> str:
+        playlist = Playlists.objects(playlist_id=playlist_id, user=username, api=api).first()
         if playlist:
             playlist.delete()
-            return True
-        return False
+            return "Success, playlist has been removed"
+        return "Error, playlist not found"

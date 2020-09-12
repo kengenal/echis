@@ -1,17 +1,25 @@
 import os
 import sys
-from typing import List
 
+from echis.main import settings
 from echis.main.main import BotClient
+from echis.modules.mongo import mongo_init
 
 
-def get_extensions() -> List[str]:
-    return [
-        "meme",
-        "report",
-        "music",
-        "new_member",
-    ]
+def load_commands(client: BotClient, module_name: str):
+    for ext in settings.COMMANDS:
+        try:
+            client.load_extension(f"{module_name}.cogs.{ext}")
+        except Exception as error:
+            print(error)
+
+
+def load_tasks(client: BotClient, module_name: str):
+    for ext in settings.TASKS:
+        try:
+            client.load_extension(f"{module_name}.tasks.{ext}")
+        except Exception as error:
+            print(error)
 
 
 def start_bot():
@@ -22,10 +30,8 @@ def start_bot():
     if not TOKEN or not BOT_PREFIX:
         sys.exit("Token not found")
     client = BotClient(command_prefix=BOT_PREFIX)
-    # client.remove_command("help")
-    for ext in get_extensions():
-        try:
-            client.load_extension(f"{MODULE_NAME}.cogs.{ext}")
-        except Exception as error:
-            print(error)
+    if os.getenv("MONGO_URL"):
+        mongo_init()
+    load_commands(client=client, module_name=MODULE_NAME)
+    load_tasks(client=client, module_name=MODULE_NAME)
     client.run(TOKEN)

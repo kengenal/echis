@@ -51,13 +51,14 @@ class Deezer(AbstractShare):
     url: str = "https://api.deezer.com/playlist/{}"
 
     def fetch(self, playlist_id: int, limit: int = 1):
-        playlists: Optional[Dict]
+        playlists: Optional[Dict] = {}
         try:
             rq = requests.get(self.url.format(playlist_id)).json()
-            playlists = rq["tracks"]["data"]
+            if "tracks" in rq:
+                playlists = rq["tracks"]["data"]
         except KeyError:
             raise Exception("Cannot download playlist")
-        except Exception:
+        except Exception as err:
             raise Exception("Cannot download playlist")
         songs: List[Share] = []
         if playlists:
@@ -68,14 +69,14 @@ class Deezer(AbstractShare):
                     title=playlist["title"],
                     rank=playlist["rank"],
                     artist=playlist["artist"]["name"],
-                    cover=playlist["album"]["cover_medium"],
+                    cover=playlist["album"]["cover_big"],
                     album=playlist["album"]["title"],
                     playlist_id=str(rq["id"]),
                     added_to_playlist=timestamp.strftime('%Y-%m-%d %H:%M:%S'),
                     added_by=rq["creator"]["name"],
                     api="deezer"
                 ))
-        sorted_songs = sorted(self.playlists, key=lambda x: x.added_to_playlist, reverse=True)
+        sorted_songs = sorted(songs, key=lambda x: x.added_to_playlist, reverse=True)
         self.playlists = sorted_songs
 
     def playlist_is_exists(self, playlist_id: str) -> bool:
@@ -97,15 +98,16 @@ class Spotify(AbstractShare, TokenRequired):
                    "}&fields=artist%3Btitle%3Bimages%3Bid%3Bpopularity%3Bname%3Badded_at& "
 
     def fetch(self, playlist_id: str, limit: int = 1):
-        playlists: Optional[Dict]
+        playlists: Optional[Dict] = []
         market = os.getenv('SPOTIFY_MARKET')
         try:
             token = self.get_token()
             headers = {
                 "Authorization": f"Bearer {token}"
             }
-            rq = requests.get(self.url.format(playlist_id, limit, market) ,headers=headers).json()
-            playlists = rq["items"]
+            rq = requests.get(self.url.format(playlist_id, limit, market), headers=headers).json()
+            if "items" in rq:
+                playlists = rq["items"]
         except KeyError:
             raise Exception("Cannot download playlist")
         except Exception as error:
@@ -117,8 +119,8 @@ class Spotify(AbstractShare, TokenRequired):
                 songs.append(Share(
                     song_id=str(playlist["track"]["id"]),
                     artist=playlist['track']["album"]["artists"][0]["name"],
-                    title=playlist["track"]["id"],
-                    cover=[x for x in playlist["track"]["album"]["images"] if x['height'] == 640][0],
+                    title=playlist["track"]["name"],
+                    cover=[x for x in playlist["track"]["album"]["images"] if x['height'] == 640][0]["url"],
                     rank=playlist["track"]["popularity"],
                     album=playlist["track"]["album"]["name"],
                     playlist_id=str(playlist["track"]["album"]["id"]),
@@ -131,10 +133,11 @@ class Spotify(AbstractShare, TokenRequired):
     def playlist_is_exists(self, playlist_id: str):
         try:
             token = self.get_token()
+            market_code = os.getenv("SPOTIFY_MARKET", "PL")
             headers = {
                 "Authorization": f"Bearer {token}"
             }
-            rq = requests.get(self.url.format(playlist_id, 1, "EN"), headers=headers)
+            rq = requests.get(self.url.format(playlist_id, 1, market_code), headers=headers)
             if "error" in rq.json():
                 return False
             return True

@@ -2,9 +2,10 @@ from typing import List
 from unittest.mock import Mock
 
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 from dotenv import load_dotenv
 
-from echis.model.share import Playlists, SharedSongs
+from echis.model import share
 from echis.modules.mongo import mongo_init
 from echis.modules.share_playlist import Deezer, Share
 
@@ -32,32 +33,34 @@ def con():
 
 @pytest.fixture()
 def create_playlist():
-    pl = Playlists(playlist_id="6492294924", user="test", api="deezer")
+    pl = share.Playlists(playlist_id="6492294924", user="test", api="deezer")
     pl.save()
 
 
-def test_create_collection(con):
-    pl = Playlists(playlist_id="6492294924", user="kengenal", api="deezer")
+def test_add_to_playlist(monkeypatch: MonkeyPatch, con):
+    pl = share.Playlists(playlist_id="231321330216510", user="test", api="deezer")
     pl.save()
 
+    def get_mock(*args, **kwargs) -> Deezer:
+        mock = Deezer()
+        mock.fetch = Mock(name="fetch")
+        mock.playlists = get_last()
+        return mock
 
-def test_add_to_playlist(con):
-    pl = Playlists(playlist_id="564216554", user="test", api="deezer")
-    pl.save()
-
-    mock = Deezer()
-    mock.fetch = Mock(name="fetch")
-    mock.playlists = get_last()
-    songs = SharedSongs.fetch_playlist(client=mock)
-
+    monkeypatch.setattr(share, "get_interface", get_mock)
+    songs = share.SharedSongs.fetch_playlist()
     assert len(songs) > 0
     assert songs[0].playlist_id == "564216554"
 
 
-def test_fetch_playlists_without_playlist_should_return_empty_array(con):
-    mock = Deezer()
-    mock.fetch = Mock(name="fetch")
-    mock.playlists = get_last()
-    songs = SharedSongs.fetch_playlist(client=mock)
+def test_fetch_playlists_without_playlist_should_return_empty_array(monkeypatch: MonkeyPatch,con):
+    def get_mock(*args, **kwargs) -> Deezer:
+        mock = Deezer()
+        mock.fetch = Mock(name="fetch")
+        mock.playlists = get_last()
+        return mock
+
+    monkeypatch.setattr(share, "get_interface", get_mock)
+    songs = share.SharedSongs.fetch_playlist()
 
     assert len(songs) == 0
