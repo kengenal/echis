@@ -19,7 +19,7 @@ class Music(mixins.BaseCog):
     display_queue: List[str] = []
     stop: bool = False
     set_volume: float = 0.5
-    queue_limit = 10
+    queue_limit = 2
     is_playing = False
 
     async def play_queue(self, ctx: Context):
