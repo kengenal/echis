@@ -5,6 +5,7 @@ from typing import List, Optional
 
 import mongoengine as me
 
+from echis.main import settings
 from echis.modules.share_playlist import Spotify, Deezer, AbstractShare, Share
 
 
@@ -49,6 +50,14 @@ class SharedSongs(me.Document):
                     create.is_shared = True
                     create.save()
                     songs.append(latest)
+        return songs
+
+    @staticmethod
+    def get_songs_to_play() -> List[str]:
+        share: List[Share] = SharedSongs.objects().order_by(settings.SHARE_DATE_SORTED)[:settings.QUEUE_LIMIT]
+        songs = []
+        for song in share:
+            songs.append(f"{song.artist} {song.title}")
         return songs
 
 
