@@ -1,0 +1,22 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+pytest = "6.1.2"
+mongomock = "3.21.0"
+
+[packages]
+"discord.py" = "1.5.1"
+mongoengine = "0.20.0"
+dataclasses = "0.6"
+dnspython = "2.0.0"
+youtube-dl = "2020.11.12"
+requests = "2.25.0"
+pynacl = "1.4.0"
+python-dotenv = "0.15.0"
+pyjwt = "1.1.0"
+
+[requires]
+python_version = "3.8"
