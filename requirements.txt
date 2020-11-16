@@ -18,8 +18,3 @@ youtube-dl==2020.7.28
 dnspython==2.0.0
 mongoengine==0.20.0
 dataclasses==0.6
-requirements.txt found, instead of Pipfile! Converting…
-Warning: Your Pipfile now contains pinned versions, if your requirements.txt did. 
-We recommend updating your Pipfile to specify the "*" version, instead.
--i https://pypi.org/simple
-
