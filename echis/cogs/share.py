@@ -1,7 +1,4 @@
 import inspect
-import os
-
-from discord.ext import tasks
 
 from echis.model.share import Playlists
 from echis.modules import mixins

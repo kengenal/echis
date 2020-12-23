@@ -6,6 +6,7 @@ from discord.ext import tasks
 from discord.utils import get
 
 from echis import BotClient
+from echis.main.settings import SHARED_CHANNEL
 from echis.model.share import SharedSongs
 from echis.modules.mixins import BaseCog
 from echis.modules.share_playlist import Share
@@ -21,7 +22,7 @@ class shareTask(BaseCog):
 
     @tasks.loop(minutes=5.0)
     async def share_task(self):
-        shared_channel = os.getenv("SHARED_CHANNEL")
+        shared_channel = SHARED_CHANNEL
         channel = get(self.client.get_all_channels(), name=shared_channel)
         try:
             song_list: List[Share] = SharedSongs.fetch_playlist()

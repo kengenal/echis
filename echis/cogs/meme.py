@@ -4,6 +4,7 @@ import discord
 
 from discord.ext.commands import Context, command
 
+from echis.main.settings import MEME_CHANNEL
 from echis.modules import mixins
 from echis.modules.meme import RedditMeme
 
@@ -14,8 +15,8 @@ class Meme(mixins.BaseCog, name="Meme"):
         """ send random meme from reddit, you can add parameter like !meme dark-meme """
         current_channel = ctx.message.channel.name
         channel_name = None
-        if os.getenv("MEME"):
-            channel_name = os.getenv("MEME")
+        if MEME_CHANNEL:
+            channel_name = MEME_CHANNEL
         if str(current_channel) == str(channel_name):
             try:
                 reddit = RedditMeme()

@@ -6,7 +6,7 @@ from echis.modules.filter import is_bad_word
 
 @pytest.fixture()
 def path():
-    return os.path.abspath("echis/csv/bad_words.csv")
+    return os.path.abspath("../../echis/csv/bad_words.csv")
 
 
 def test_is_bad_word_get_true(path: str):

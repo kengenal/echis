@@ -1,10 +1,8 @@
-import os
-from abc import ABC
-
 import discord
 
 from discord.ext import commands
 from echis import BotClient
+from echis.main.settings import MEME_CHANNEL
 
 
 class BaseCog(commands.Cog):
@@ -12,6 +10,6 @@ class BaseCog(commands.Cog):
         self.client = client
 
     async def send_to_admin(self, error: Exception):
-        admin = os.getenv("ADMIN_CHANNEL")
+        admin = MEME_CHANNEL
         channel = discord.utils.get(self.client.get_all_channels(), name=admin)
         await channel.send(f'Error : {error}')

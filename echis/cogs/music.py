@@ -1,4 +1,3 @@
-import os
 import asyncio
 from typing import List
 
@@ -9,6 +8,7 @@ from discord.ext.commands import Context, command, group
 
 from echis import BotClient
 from echis.main import settings
+from echis.main.settings import BOT_NAME
 from echis.model.share import SharedSongs
 from echis.modules import mixins
 from echis.modules.youtube import YoutubeStream
@@ -67,7 +67,7 @@ class Music(mixins.BaseCog):
     @command(pass_context=True)
     async def volume(self, ctx: Context, volume: int = None):
         """ Change volume  0 - 10 """
-        name = os.getenv("BOT_NAME")
+        name = BOT_NAME
         if ctx.voice_client is None:
             return await ctx.send(embed=discord.Embed(title=f":face_with_symbols_over_mouth: {name} is not connected"))
         if not volume:

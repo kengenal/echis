@@ -1,11 +1,7 @@
 import asyncio
 
-import requests
-import configparser
-import sys
 import youtube_dl
 import discord
-import os
 
 from urllib.parse import urlparse
 
