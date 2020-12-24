@@ -21,7 +21,7 @@ def get_interface(name: str) -> AbstractShare:
 class SharedSongs(me.Document):
     record_id = me.UUIDField(default=uuid.uuid4(), required=False)
     title = me.StringField(required=False)
-    rank = me.IntField(required=True)
+    rank = me.IntField(required=False)
     song_id = me.StringField(required=True)
     artist = me.StringField(required=False)
     cover = me.StringField(required=False)
@@ -35,7 +35,7 @@ class SharedSongs(me.Document):
 
     @staticmethod
     def fetch_playlist() -> Optional[List[Share]]:
-        get_playlists: List[Playlists] = Playlists.objects
+        get_playlists: List[Playlists] = Playlists.objects(is_active=True)
         songs: List[Share] = []
         for playlist in get_playlists:
             client = get_interface(playlist.api)

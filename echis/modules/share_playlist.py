@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Dict, List, Optional
 
+from echis.main import settings
 from echis.main.settings import SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_MARKET
 from echis.modules.token_authorization import SpotifyAuthorization
 
@@ -90,15 +91,17 @@ class Deezer(AbstractShare):
 
 
 class Spotify(AbstractShare, TokenRequired):
+
     def __init__(self):
         client_id = SPOTIFY_CLIENT_ID
+        self.playlists: List[Share] = []
         client_secret = SPOTIFY_CLIENT_SECRET
         self.token = SpotifyAuthorization(client_id=client_id, client_secret=client_secret)
         self.url = "https://api.spotify.com/v1/playlists/{}/tracks?&limit={}&market={" \
                    "}&fields=artist%3Btitle%3Bimages%3Bid%3Bpopularity%3Bname%3Badded_at& "
 
     def fetch(self, playlist_id: str, limit: int = 1):
-        playlists: Optional[Dict] = []
+        playlists: Optional[Dict] = None
         market = SPOTIFY_MARKET
         try:
             token = self.get_token()
@@ -113,10 +116,10 @@ class Spotify(AbstractShare, TokenRequired):
         except Exception as error:
             print(error)
             raise Exception("Cannot download playlist")
-        songs: List[Share] = []
+
         if rq and playlists:
             for playlist in playlists:
-                songs.append(Share(
+                self.playlists.append(Share(
                     song_id=str(playlist["track"]["id"]),
                     artist=playlist['track']["album"]["artists"][0]["name"],
                     title=playlist["track"]["name"],
@@ -128,7 +131,6 @@ class Spotify(AbstractShare, TokenRequired):
                     added_by=playlist["added_by"]["id"],
                     api="spotify"
                 ))
-        self.playlists = songs
 
     def playlist_is_exists(self, playlist_id: str):
         try:
@@ -149,3 +151,58 @@ class Spotify(AbstractShare, TokenRequired):
             return self.token.token
         self.token.get_token()
         return self.token.token
+
+
+class Youtube(AbstractShare, TokenRequired):
+    def __init__(self):
+        self.playlists: List[Share] = []
+        self.playlist_url = "https://youtube.googleapis.com/youtube/v3/playlistItems?part=contentDetails&key={}&playlistId={}&maxResults=1"
+        self.video_url = "https://www.googleapis.com/youtube/v3/videos?key={}&part=snippet&id=T0Jqdjbed40"
+
+    def fetch(self, playlist_id: str, limit: int = 1, owner=None):
+        playlists: Optional[Dict] = {}
+        token = self.get_token()
+        try:
+            rq = requests.get(self.video_url.format(self.get_video(playlist_id, token))).json()
+            if "items" in rq:
+                playlists = rq["items"]
+            if playlists:
+                for playlist in playlists:
+                    self.playlists.append(Share(
+                        song_id=str(playlist["id"]),
+                        title=playlist["snippet"]["title"],
+                        rank="Unavailable in youtube api",
+                        artist=playlist["snippet"]["title"],
+                        cover=playlist["snippet"]["thumbnails"]["maxres"]["url"],
+                        album=playlist["snippet"]["title"],
+                        playlist_id=playlist_id,
+                        added_to_playlist=playlist["snippet"]["publishedAt"],
+                        added_by=owner,
+                        api="youtube"
+                    ))
+        except KeyError:
+            raise Exception("Cannot download playlist")
+        except Exception:
+            raise Exception("Cannot download playlist")
+
+    def get_video(self, playlist_id: str, token: str) -> Optional[str]:
+        rq = requests.get(self.playlist_url.format(token, playlist_id))
+        if video_id := rq.json()[0]["contentDetails"].get("videoId", None) and rq.status_code == 200:
+            return video_id
+        return None
+
+    def get_token(self) -> str:
+        token = settings.YOUTUBE_TOKEN
+        if not token:
+            raise Exception("Youtube token is empty")
+        return token
+
+    def playlist_is_exists(self, playlist_id: str) -> bool:
+        try:
+            token = self.get_token()
+            rq = requests.get(self.playlist_url.format(token, playlist_id))
+            if rq.status_code != 200:
+                return False
+            return True
+        except ConnectionError as error:
+            raise ConnectionError(error)
