@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 QUEUE_LIMIT = os.getenv("QUEUE_LIMIT", 1)
 DEFAULT_VOLUME = os.getenv("DEFAULT_QUEUE", 0.5)
@@ -16,6 +17,8 @@ COMMANDS = [
 TASKS = [
     "share_task",
 ]
+
+ROOT_DIR = Path(__file__).resolve(strict=True).parent.parent
 
 TOKEN_SECRET = os.getenv("TOKEN_SECRET", default="7xdhbjn!silr%7mk_694^gufxry-m*!kif!4+e%x6haf2$#p+o")
 TOKEN_ALGORITHM = os.getenv("TOKEN_ALGORITHM", default="HS512")
@@ -43,5 +46,3 @@ MEME_CHANNEL = "meme"
 REGISTER_ROLE = "registered"
 REGISTER_CHANNEL = "start"
 SHARED_CHANNEL = "share"
-
-

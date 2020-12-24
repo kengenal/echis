@@ -3,7 +3,6 @@ from unittest.mock import Mock
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
-from dotenv import load_dotenv
 
 from echis.model import share
 from echis.modules.mongo import mongo_init
@@ -27,7 +26,6 @@ def get_last() -> List[Share]:
 
 @pytest.fixture()
 def con():
-    load_dotenv()
     mongo_init(test=True)
 
 

@@ -1,7 +1,4 @@
-import os
-
 from mongoengine import connect
-
 from echis.main.settings import MONGO_URL
 
 
