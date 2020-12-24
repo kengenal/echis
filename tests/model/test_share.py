@@ -51,7 +51,7 @@ def test_add_to_playlist(monkeypatch: MonkeyPatch, con):
     assert songs[0].playlist_id == "564216554"
 
 
-def test_fetch_playlists_without_playlist_should_return_empty_array(monkeypatch: MonkeyPatch,con):
+def test_fetch_playlists_without_playlist_should_return_empty_array(monkeypatch: MonkeyPatch, con):
     def get_mock(*args, **kwargs) -> Deezer:
         mock = Deezer()
         mock.fetch = Mock(name="fetch")

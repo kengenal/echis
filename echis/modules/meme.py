@@ -1,6 +1,4 @@
-import re
 from typing import Dict, List
-from urllib.parse import urlparse
 
 import requests
 
@@ -59,4 +57,3 @@ class RedditMeme:
 
     def by_query(self, query: str = "", limit: int = 1):
         return self._parse(query=query, limit=limit, sort="", endpoint=self.RED_ENDPOINT)
-

@@ -1,4 +1,3 @@
-import os
 import requests
 
 from abc import ABC, abstractmethod
@@ -59,7 +58,7 @@ class Deezer(AbstractShare):
                 playlists = rq["tracks"]["data"]
         except KeyError:
             raise Exception("Cannot download playlist")
-        except Exception as err:
+        except Exception:
             raise Exception("Cannot download playlist")
         songs: List[Share] = []
         if playlists:

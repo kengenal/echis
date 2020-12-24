@@ -44,4 +44,3 @@ def test_random_meme_empty_value(mock: MagicMock, reddit: RedditMeme):
         _ = reddit.hot
         _ = reddit.fresh
         assert exception_meme.value == "Problem with downloading meme"
-

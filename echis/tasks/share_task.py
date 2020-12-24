@@ -1,4 +1,3 @@
-import os
 from typing import List
 
 import discord
@@ -12,7 +11,7 @@ from echis.modules.mixins import BaseCog
 from echis.modules.share_playlist import Share
 
 
-class shareTask(BaseCog):
+class ShareTask(BaseCog):
     def __init__(self, client: BotClient):
         super().__init__(client)
         self.share_task.start()
@@ -46,4 +45,4 @@ class shareTask(BaseCog):
 
 
 def setup(client):
-    client.add_cog(shareTask(client))
+    client.add_cog(ShareTask(client))

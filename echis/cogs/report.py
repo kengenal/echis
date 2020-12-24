@@ -1,5 +1,3 @@
-import os
-
 import discord
 
 from echis.main.settings import ADMIN_CHANNEL

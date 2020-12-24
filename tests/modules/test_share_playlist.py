@@ -32,7 +32,7 @@ class MockResponseWithData:
                             "id": "8310422",
                             "title": "Breaking The model",
                             "cover_big": "https://e-cdns-images.dzcdn.net/images/cover"
-                                            "/5bf40e45c5aba44a00c6afe697b0a5b9/250x250-000000-80-0-0.jpg "
+                                         "/5bf40e45c5aba44a00c6afe697b0a5b9/250x250-000000-80-0-0.jpg "
                         }
                     }
                 ],

@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "echis"
+version = "0.1.0"
+description = ""
+authors = ["kengenal <kengenal1@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+"discord.py" = "^1.5.1"
+dnspython = "^2.0.0"
+mongoengine = "^0.22.1"
+PyJWT = "^2.0.0"
+PyNaCl = "^1.4.0"
+requests = "^2.25.1"
+youtube_dl = "^2020.12.22"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.1"
+mongomock = "^3.21.0"
+flake8 = "^3.8.4"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

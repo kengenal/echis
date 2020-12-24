@@ -1,5 +1,4 @@
 import inspect
-import os
 
 from discord.ext.commands import Context, group
 from discord.utils import get
