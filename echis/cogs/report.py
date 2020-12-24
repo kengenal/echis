@@ -1,7 +1,6 @@
-import os
-
 import discord
 
+from echis.main.settings import ADMIN_CHANNEL
 from echis.modules import mixins
 from discord.ext.commands import has_permissions, command
 
@@ -14,7 +13,7 @@ class Report(mixins.BaseCog):
             description = str(description)
             author = ctx.message.author.name
             name = self.client.get_user(user_id)
-            channel = os.getenv("ADMIN_CHANNEL")
+            channel = ADMIN_CHANNEL
             chan = discord.utils.get(self.client.get_all_channels(), name=channel)
             embed = discord.Embed(olour=discord.Color.red())
             embed.set_author(name="Report")
@@ -32,7 +31,7 @@ class Report(mixins.BaseCog):
     async def find(self, ctx, user_id: int):
         """ you can find user if have admin permission, takes user id  """
         current_channel = ctx.message.channel.name
-        channel_name = os.getenv("ADMIN_CHANNEL")
+        channel_name = ADMIN_CHANNEL
         if str(current_channel) == str(channel_name):
             if id:
                 name = self.client.get_user(user_id)

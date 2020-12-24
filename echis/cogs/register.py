@@ -1,9 +1,9 @@
 import inspect
-import os
 
 from discord.ext.commands import Context, group
 from discord.utils import get
 
+from echis.main.settings import REGISTER_CHANNEL
 from echis.modules import mixins
 
 
@@ -24,7 +24,7 @@ class Register(mixins.BaseCog):
     async def _add_role(self, ctx: Context, role_name: str):
         """ function check and add role if user don't have it """
         channel = ctx.message.channel.name
-        if str(channel) == str(os.getenv("REGISTER_CHANNEL")):
+        if str(channel) == str(REGISTER_CHANNEL):
             role = ctx.author.roles
             user = ctx.author
             check = list(filter(lambda x: x.name == role_name, role))

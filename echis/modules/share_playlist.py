@@ -1,4 +1,3 @@
-import os
 import requests
 
 from abc import ABC, abstractmethod
@@ -6,6 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Dict, List, Optional
 
+from echis.main.settings import SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_MARKET
 from echis.modules.token_authorization import SpotifyAuthorization
 
 
@@ -58,7 +58,7 @@ class Deezer(AbstractShare):
                 playlists = rq["tracks"]["data"]
         except KeyError:
             raise Exception("Cannot download playlist")
-        except Exception as err:
+        except Exception:
             raise Exception("Cannot download playlist")
         songs: List[Share] = []
         if playlists:
@@ -91,15 +91,15 @@ class Deezer(AbstractShare):
 
 class Spotify(AbstractShare, TokenRequired):
     def __init__(self):
-        client_id = os.getenv("SPOTIFY_CLIENT_ID")
-        client_secret = os.getenv("SPOTIFY_CLIENT_SECRET")
+        client_id = SPOTIFY_CLIENT_ID
+        client_secret = SPOTIFY_CLIENT_SECRET
         self.token = SpotifyAuthorization(client_id=client_id, client_secret=client_secret)
         self.url = "https://api.spotify.com/v1/playlists/{}/tracks?&limit={}&market={" \
                    "}&fields=artist%3Btitle%3Bimages%3Bid%3Bpopularity%3Bname%3Badded_at& "
 
     def fetch(self, playlist_id: str, limit: int = 1):
         playlists: Optional[Dict] = []
-        market = os.getenv('SPOTIFY_MARKET')
+        market = SPOTIFY_MARKET
         try:
             token = self.get_token()
             headers = {
@@ -133,7 +133,7 @@ class Spotify(AbstractShare, TokenRequired):
     def playlist_is_exists(self, playlist_id: str):
         try:
             token = self.get_token()
-            market_code = os.getenv("SPOTIFY_MARKET", "PL")
+            market_code = SPOTIFY_MARKET
             headers = {
                 "Authorization": f"Bearer {token}"
             }

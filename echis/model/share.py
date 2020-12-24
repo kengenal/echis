@@ -23,7 +23,6 @@ class SharedSongs(me.Document):
     title = me.StringField(required=False)
     rank = me.IntField(required=True)
     song_id = me.StringField(required=True)
-    title = me.StringField(required=True)
     artist = me.StringField(required=False)
     cover = me.StringField(required=False)
     album = me.StringField(required=True)

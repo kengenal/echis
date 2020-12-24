@@ -23,9 +23,9 @@ def load_tasks(client: BotClient, module_name: str):
 
 
 def start_bot():
-    TOKEN = os.getenv("TOKEN")
+    TOKEN = settings.TOKEN
     MODULE_NAME = __name__
-    BOT_PREFIX = os.getenv("PREFIX")
+    BOT_PREFIX = settings.PREFIX
 
     if not TOKEN or not BOT_PREFIX:
         sys.exit("Token not found")

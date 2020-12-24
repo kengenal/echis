@@ -5,6 +5,7 @@ from discord import Message
 from discord.ext import commands
 from discord.ext.commands import Context, CommandNotFound
 
+from echis.main.settings import ROOT_DIR
 from echis.modules.filter import is_bad_word
 
 
@@ -15,7 +16,7 @@ class BotClient(commands.Bot):
 
     async def on_message(self, message: Message):
         messages = message.content.split(" ")
-        path = os.path.abspath("./echis/csv/bad_words.csv")
+        path = os.path.join(ROOT_DIR, "csv/bad_words.csv")
         for mes in messages:
             is_bad = is_bad_word(mes, path=path)
             if is_bad:

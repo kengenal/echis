@@ -1,6 +1,0 @@
-pytest~=6.0.1
-requests~=2.24.0
-mongoengine~=0.20.0
-python-dotenv~=0.14.0
-mongomock==3.20.0
-

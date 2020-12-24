@@ -1,11 +1,7 @@
 import asyncio
 
-import requests
-import configparser
-import sys
 import youtube_dl
 import discord
-import os
 
 from urllib.parse import urlparse
 
@@ -22,7 +18,7 @@ ytdl_format_options = {
     'quiet': True,
     'no_warnings': True,
     'default_search': 'auto',
-    'source_address': '0.0.0.0' # bind to ipv4 since ipv6 addresses cause issues sometimes
+    'source_address': '0.0.0.0'  # bind to ipv4 since ipv6 addresses cause issues sometimes
 }
 
 ffmpeg_options = {
@@ -58,6 +54,6 @@ def is_url(query):
         url = urlparse(query)
         if url.hostname:
             u = True
-    except Exception as error:
+    except Exception:
         u = False
     return u

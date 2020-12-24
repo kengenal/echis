@@ -1,5 +1,6 @@
 import csv
 
+
 def is_bad_word(word: str, path: str = None) -> bool:
     is_bad = False
     with open(path, 'r') as f:

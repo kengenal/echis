@@ -1,5 +1,4 @@
 import posixpath
-from urllib.parse import urljoin
 
 from discord.ext.commands import command, Context
 

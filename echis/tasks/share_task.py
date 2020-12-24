@@ -1,4 +1,3 @@
-import os
 from typing import List
 
 import discord
@@ -6,12 +5,13 @@ from discord.ext import tasks
 from discord.utils import get
 
 from echis import BotClient
+from echis.main.settings import SHARED_CHANNEL
 from echis.model.share import SharedSongs
 from echis.modules.mixins import BaseCog
 from echis.modules.share_playlist import Share
 
 
-class shareTask(BaseCog):
+class ShareTask(BaseCog):
     def __init__(self, client: BotClient):
         super().__init__(client)
         self.share_task.start()
@@ -21,7 +21,7 @@ class shareTask(BaseCog):
 
     @tasks.loop(minutes=5.0)
     async def share_task(self):
-        shared_channel = os.getenv("SHARED_CHANNEL")
+        shared_channel = SHARED_CHANNEL
         channel = get(self.client.get_all_channels(), name=shared_channel)
         try:
             song_list: List[Share] = SharedSongs.fetch_playlist()
@@ -45,4 +45,4 @@ class shareTask(BaseCog):
 
 
 def setup(client):
-    client.add_cog(shareTask(client))
+    client.add_cog(ShareTask(client))

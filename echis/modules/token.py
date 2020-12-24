@@ -15,5 +15,5 @@ def create_token(data):
     if not data:
         raise Exception("Data cannot be null")
     payload["exp"] = datetime.utcnow() + timedelta(minutes=int(exp))
-    token = jwt.encode(payload, get_secret, algorithm=get_alg).decode("UTF-8")
+    token = jwt.encode(payload, get_secret, algorithm=get_alg)
     return token
