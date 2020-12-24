@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "echis"
-version = "0.1.0"
-description = ""
-authors = ["kengenal <kengenal1@gmail.com>"]
+version = "0.0.1"
+description = "Echis discord bot"
+authors = ["kengenal"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
