@@ -6,16 +6,18 @@ from typing import List, Optional
 import mongoengine as me
 
 from echis.main import settings
-from echis.modules.share_playlist import Spotify, Deezer, AbstractShare, Share
+from echis.modules.share_playlist import Spotify, Deezer, AbstractShare, Share, Youtube
 
 
-def get_interface(name: str) -> AbstractShare:
+def get_interface(name: str):
     name_clear = name.strip().lower()
     client = {
-        "spotify": Spotify(),
-        "deezer": Deezer()
+        "spotify": Spotify,
+        "deezer": Deezer,
+        "youtube": Youtube,
     }
-    return client.get(name_clear, Deezer)
+    get_client = client.get(name_clear, None)
+    return get_client
 
 
 class SharedSongs(me.Document):
@@ -31,6 +33,7 @@ class SharedSongs(me.Document):
     added_by = me.StringField(required=False)
     created_at = me.DateTimeField(default=datetime.utcnow)
     api = me.StringField(required=False)
+    link = me.StringField(required=False)
     is_shared = me.BooleanField(default=False)
 
     @staticmethod
@@ -38,17 +41,21 @@ class SharedSongs(me.Document):
         get_playlists: List[Playlists] = Playlists.objects(is_active=True)
         songs: List[Share] = []
         for playlist in get_playlists:
-            client = get_interface(playlist.api)
-            client.fetch(playlist_id=playlist.playlist_id)
-            latest: Share = client.get_latest
-            latest.added_by = playlist.user
-            if latest:
-                is_exists = SharedSongs.objects(song_id=latest.song_id, api=latest.api).count()
-                if not is_exists:
-                    create = SharedSongs(**asdict(latest))
-                    create.is_shared = True
-                    create.save()
-                    songs.append(latest)
+            interface = get_interface(playlist.api)
+            if interface:
+                client = interface()
+                client.fetch(playlist_id=playlist.playlist_id)
+                latest: Share = client.get_latest
+                if latest:
+                    latest.added_by = playlist.user
+                    is_exists = SharedSongs.objects(song_id=latest.song_id, api=latest.api).count()
+                    if not is_exists:
+                        create = SharedSongs(**asdict(latest))
+                        create.is_shared = True
+                        # create.save()
+                        songs.append(latest)
+                else:
+                    raise Exception("Playlist not exist")
         return songs
 
     @staticmethod
@@ -81,7 +88,7 @@ class Playlists(me.Document):
             else:
                 return "Error, playlist not found"
         else:
-            return "Error, playlist already exists"
+            return "Error, playlist already exists, playlist must be public"
 
     @staticmethod
     def remove_playlist(playlist_id: str, username: str, api: str) -> str:
