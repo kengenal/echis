@@ -29,12 +29,12 @@ class ShareTask(BaseCog):
                 for song in song_list:
                     embed = discord.Embed(
                         title=f"{song.artist} - {song.title}",
-                        description=f'Album - "{song.album}"',
+                        description=f'Check: {song.link}',
                         color=discord.Color.green(),
                     )
-                    embed.set_author(name=f"Share by {song.added_by}")
+                    embed.set_author(name=f"Author - {song.added_by}")
                     embed.set_image(url=song.cover)
-                    embed.set_footer(text=f"Rank on {song.api} - {song.rank}")
+                    embed.set_footer(text=f"Platform {song.api}  {song.rank if song.rank else ''}")
                     await channel.send(embed=embed)
         except Exception as error:
             await self.send_to_admin(error=error)
