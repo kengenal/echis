@@ -11,16 +11,17 @@ from echis.modules.share_playlist import Deezer, Share
 
 def get_last() -> List[Share]:
     return [Share(
-        song_id='2141243213',
-        title='Test',
-        rank='411532',
-        artist='yes',
-        cover='https://e-cdns-images.dzcdn.net/images/cover/5bf40e45c5aba44a00c6afe697b0a5b9/250x250-000000-80-0-0.jpg ',
-        album='Model',
-        playlist_id='564216554',
-        added_to_playlist='2019-09-05 13:57:11',
-        added_by='random',
-        api='deezer'
+        song_id="2141243213",
+        title="Test",
+        rank=411532,
+        artist="yes",
+        cover="https://e-cdns-images.dzcdn.net/images/cover/5bf40e45c5aba44a00c6afe697b0a5b9/250x250-000000-80-0-0.jpg",
+        album="Model",
+        playlist_id="564216554",
+        added_to_playlist="2019-09-05 13:57:11",
+        added_by="random",
+        api="deezer",
+        link="test"
     )]
 
 

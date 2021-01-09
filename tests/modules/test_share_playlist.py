@@ -24,6 +24,7 @@ class MockResponseWithData:
                         "title": "Fire Up The Night",
                         "rank": "411532",
                         "time_add": 1567684631,
+                        "link": "test",
                         "artist": {
                             "id": "407259",
                             "name": "New Medicine",
@@ -114,9 +115,9 @@ class MockYoutubeData:
                     "snippet": {
                         "publishedAt": "2011-09-23T09:27:32Z",
                         "title": "HD Film Countdown Leader in 16x9 Ratio",
-                        "description": "Beastly Exploitation Cinema's Film Leader Countdown.This 1080p HD Film Countdown Leader  was created with Paint.Net and VirtualDub.  There is no sound.  The countdown was created at 24 FPS to give every frame a correct \"Film\" feel.  The countdown is based off actual countdowns here on YouTube and 16mm ones in my possession.\r\n\r\nPaint.Net was used to create the templates and then individual frames and textures.  Paint.Net can be gotten for free from here: http://www.getpaint.net/\r\n\r\nVirtualDub was used to put all of the components together by use of the filter: Logo (1.7b2) by Donald Graft.  That filter was used a total of twenty times to create the countdown. (I personally feel that Donald Graft's Logo filter is the most powerful and most overlooked filter available for VirtualDub).  VirtualDub can be gotten for free from here: http://www.virtualdub.org/\r\n\r\nSince there is no sound, the classic \"beep\" is missing when the 2 appears.\r\n\r\nThis video is freely available to everyone for any of their projects, to do with as they want.  No credit is needed.\r\n\r\nThere is also a 1080p HD 3x2 and a 4x3 (Academy Aperture) Film Countdown Leader available from my channel.",
+                        "description": "Beastly Exploitation Cinema's Film Leader Countdown.This 1080p HD Film ",
                         "thumbnails": {
-                            "maxres": {
+                            "high": {
                                 "url": "https://i.ytimg.com/vi/T0Jqdjbed40/maxresdefault.jpg",
                             }
                         },

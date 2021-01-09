@@ -6,15 +6,15 @@ from typing import List, Optional
 import mongoengine as me
 
 from echis.main import settings
-from echis.modules.share_playlist import Spotify, Deezer, AbstractShare, Share, Youtube
+from echis.modules.share_playlist import Spotify, Deezer, Share, Youtube, AbstractShare
 
 
-def get_interface(name: str):
+def get_interface(name: str) -> AbstractShare:
     name_clear = name.strip().lower()
     client = {
-        "spotify": Spotify,
-        "deezer": Deezer,
-        "youtube": Youtube,
+        "spotify": Spotify(),
+        "deezer": Deezer(),
+        "youtube": Youtube(),
     }
     get_client = client.get(name_clear, None)
     return get_client
@@ -33,7 +33,7 @@ class SharedSongs(me.Document):
     added_by = me.StringField(required=False)
     created_at = me.DateTimeField(default=datetime.utcnow)
     api = me.StringField(required=False)
-    link = me.StringField(required=False)
+    link = me.StringField(required=False, default="")
     is_shared = me.BooleanField(default=False)
 
     @staticmethod
@@ -43,7 +43,7 @@ class SharedSongs(me.Document):
         for playlist in get_playlists:
             interface = get_interface(playlist.api)
             if interface:
-                client = interface()
+                client = interface
                 client.fetch(playlist_id=playlist.playlist_id)
                 latest: Share = client.get_latest
                 if latest:
@@ -52,7 +52,7 @@ class SharedSongs(me.Document):
                     if not is_exists:
                         create = SharedSongs(**asdict(latest))
                         create.is_shared = True
-                        # create.save()
+                        create.save()
                         songs.append(latest)
                 else:
                     raise Exception("Playlist not exist")

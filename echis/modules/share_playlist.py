@@ -14,7 +14,7 @@ from echis.modules.token_authorization import SpotifyAuthorization
 class Share:
     song_id: str
     title: str
-    rank: str
+    rank: int
     artist: str
     cover: str
     album: str
@@ -77,8 +77,8 @@ class Deezer(AbstractShare):
                     ))
             sorted_songs = sorted(songs, key=lambda x: x.added_to_playlist, reverse=True)
             self.playlists = sorted_songs
-        except KeyError:
-            raise Exception("Cannot download playlist")
+        except KeyError as err:
+            raise Exception(err)
         except Exception:
             raise Exception("Cannot download playlist")
 
@@ -161,7 +161,8 @@ class Youtube(AbstractShare, TokenRequired):
     def __init__(self):
         self.playlists: List[Share] = []
         self.open_url = "https://www.youtube.com/watch?v={}"
-        self.playlist_url = "https://youtube.googleapis.com/youtube/v3/playlistItems?part=contentDetails&key={}&playlistId={}&maxResults=1"
+        self.playlist_url = "https://youtube.googleapis.com/youtube/v3/playlistItems?" \
+                            "part=contentDetails&key={}&playlistId={}&maxResults=1"
         self.video_url = "https://www.googleapis.com/youtube/v3/videos?key={}&part=snippet&id={}"
 
     def fetch(self, playlist_id: str, limit: int = 1, owner: Optional[str] = None):
@@ -177,7 +178,7 @@ class Youtube(AbstractShare, TokenRequired):
                     self.playlists.append(Share(
                         song_id=str(playlist["id"]),
                         title=playlist["snippet"]["title"],
-                        rank="",
+                        rank=0,
                         artist=playlist["snippet"]["title"],
                         cover=playlist["snippet"]["thumbnails"]["high"]["url"],
                         album="Empty on youtube",
