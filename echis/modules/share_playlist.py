@@ -214,3 +214,59 @@ class Youtube(AbstractShare, TokenRequired):
             return True
         except ConnectionError as error:
             raise ConnectionError(error)
+
+
+class AppleMusic(AbstractShare, TokenRequired):
+    def __init__(self):
+        self.playlists: List[Share] = []
+        self.open_url = "https://www.youtube.com/watch?v={}"
+
+    def fetch(self, playlist_id: str, limit: int = 1, owner: Optional[str] = None):
+        playlists: Optional[Dict] = {}
+        token = self.get_token()
+        try:
+            video_id = self.get_video(playlist_id, token)
+            rq = requests.get(self.video_url.format(token, video_id)).json()
+            if "items" in rq:
+                playlists = rq["items"]
+            if playlists:
+                for playlist in playlists:
+                    self.playlists.append(Share(
+                        song_id=str(playlist["id"]),
+                        title=playlist["snippet"]["title"],
+                        rank=0,
+                        artist=playlist["snippet"]["title"],
+                        cover=playlist["snippet"]["thumbnails"]["high"]["url"],
+                        album="Empty on youtube",
+                        playlist_id=playlist_id,
+                        added_to_playlist=playlist["snippet"]["publishedAt"],
+                        added_by=owner,
+                        link=self.open_url.format(video_id),
+                        api="youtube"
+                    ))
+        except KeyError:
+            raise Exception("Cannot download playlist")
+        except Exception:
+            raise Exception("Cannot download playlist")
+
+    def get_video(self, playlist_id: str, token: str) -> Optional[str]:
+        rq = requests.get(self.playlist_url.format(token, playlist_id))
+        if rq.status_code == 200:
+            return rq.json()["items"][0]["contentDetails"]["videoId"]
+        return None
+
+    def get_token(self) -> str:
+        token = settings.YOUTUBE_TOKEN
+        if not token:
+            raise Exception("Youtube token is empty")
+        return token
+
+    def playlist_is_exists(self, playlist_id: str) -> bool:
+        try:
+            token = self.get_token()
+            rq = requests.get(self.playlist_url.format(token, playlist_id))
+            if rq.status_code != 200:
+                return False
+            return True
+        except ConnectionError as error:
+            raise ConnectionError(error)
