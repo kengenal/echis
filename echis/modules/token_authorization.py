@@ -7,6 +7,7 @@ from typing import Optional, Dict
 import jwt
 import requests
 
+from echis.modules.endpoints import AppleMusicEndpoints
 from echis.modules.exceptions import BadAppleMusicCredentialsException
 
 
@@ -72,10 +73,10 @@ class AppleMusicToken:
         self._team_id = team_id
         self._alg = 'ES256'  # encryption algo that Apple requires
         self.token = ""  # encrypted api token
-        self.root = 'https://api.music.apple.com/v1/'
         self.headers: Dict = {}
+        self.endpoints = AppleMusicEndpoints()
 
-    def generate_token(self, session_length: float = 1.0):
+    def generate_token(self, session_length: float = 30.0):
         """
         Generate encrypted token to be used by in API requests.
         Set the class token parameter.
@@ -91,7 +92,7 @@ class AppleMusicToken:
             'exp': int((datetime.datetime.now() + datetime.timedelta(minutes=session_length)).timestamp())
         }
         try:
-            token = jwt.encode(payload, self._secret_key, algorithm=self._alg, headers=headers)
+            token = jwt.encode(payload, self._secret_key.strip(), algorithm=self._alg, headers=headers)
             self.token = token if type(token) is not bytes else token.decode()
             self._generate_header()
         except Exception:

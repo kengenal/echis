@@ -1,13 +1,15 @@
+import os
+
 import requests
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Iterator
 
 from echis.main import settings
 from echis.main.settings import SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_MARKET
-from echis.modules.token_authorization import SpotifyAuthorization
+from echis.modules.token_authorization import SpotifyAuthorization, AppleMusicToken
 
 
 @dataclass
@@ -218,53 +220,56 @@ class Youtube(AbstractShare, TokenRequired):
 
 class AppleMusic(AbstractShare, TokenRequired):
     def __init__(self):
+        secret = os.getenv("APPLE_SECRET_KEY")
+        key_id = os.getenv("APPLE_KEY_ID")
+        team_id = os.getenv("APPLE_TEAM_ID")
+        self.apple_token = AppleMusicToken(secret_key=secret, key_id=key_id, team_id=team_id)
         self.playlists: List[Share] = []
-        self.open_url = "https://www.youtube.com/watch?v={}"
 
     def fetch(self, playlist_id: str, limit: int = 1, owner: Optional[str] = None):
-        playlists: Optional[Dict] = {}
-        token = self.get_token()
+        playlists: Optional[Iterator] = {}
         try:
-            video_id = self.get_video(playlist_id, token)
-            rq = requests.get(self.video_url.format(token, video_id)).json()
-            if "items" in rq:
-                playlists = rq["items"]
+            self.get_token()
+            rq = self.get_songs(playlist_id).json()
+            if "data" in rq:
+                playlists = list(reversed(rq["data"]))[:5]
             if playlists:
                 for playlist in playlists:
+                    cover = str(playlist["attributes"]["artwork"]["url"]).replace("{w}", "720").replace("{h}", "720")
                     self.playlists.append(Share(
-                        song_id=str(playlist["id"]),
-                        title=playlist["snippet"]["title"],
+                        song_id=playlist["id"],
+                        title=playlist["attributes"]["name"],
                         rank=0,
-                        artist=playlist["snippet"]["title"],
-                        cover=playlist["snippet"]["thumbnails"]["high"]["url"],
-                        album="Empty on youtube",
+                        artist=playlist["attributes"]["artistName"],
+                        cover=cover,
+                        album=playlist["attributes"]["albumName"],
                         playlist_id=playlist_id,
-                        added_to_playlist=playlist["snippet"]["publishedAt"],
+                        added_to_playlist=playlist["attributes"]["releaseDate"],
                         added_by=owner,
-                        link=self.open_url.format(video_id),
-                        api="youtube"
+                        link=playlist["attributes"]["url"],
+                        api="apple-music"
                     ))
         except KeyError:
+            raise Exception("Cannot parse playlist")
+        except Exception as err:
+            print(err)
             raise Exception("Cannot download playlist")
-        except Exception:
-            raise Exception("Cannot download playlist")
-
-    def get_video(self, playlist_id: str, token: str) -> Optional[str]:
-        rq = requests.get(self.playlist_url.format(token, playlist_id))
-        if rq.status_code == 200:
-            return rq.json()["items"][0]["contentDetails"]["videoId"]
-        return None
 
     def get_token(self) -> str:
-        token = settings.YOUTUBE_TOKEN
-        if not token:
-            raise Exception("Youtube token is empty")
-        return token
+        self.apple_token.generate_token()
+        return self.apple_token.token
+
+    def get_songs(self, playlist_id):
+        playlists_endpoint = self.apple_token.endpoints.playlists
+        return requests.get(
+            playlists_endpoint.format(os.getenv("APPLE_STORE", "pl"), playlist_id),
+            headers=self.apple_token.headers
+        )
 
     def playlist_is_exists(self, playlist_id: str) -> bool:
         try:
-            token = self.get_token()
-            rq = requests.get(self.playlist_url.format(token, playlist_id))
+            self.get_token()
+            rq = self.get_songs(playlist_id)
             if rq.status_code != 200:
                 return False
             return True
