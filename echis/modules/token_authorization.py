@@ -99,5 +99,9 @@ class AppleMusicToken:
             raise BadAppleMusicCredentialsException()
 
     def _generate_header(self):
+        """
+        Create auth header for apple music api
+        :return:
+        """
         if token := self.token:
             self.headers["Authorization"] = f"Bearer {token}"
