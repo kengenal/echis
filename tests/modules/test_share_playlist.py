@@ -113,6 +113,9 @@ class MockYoutubeData:
             "items": [
                 {
                     "id": "1234",
+                    "contentDetails": {
+                        "videoId": 123
+                    },
                     "snippet": {
                         "publishedAt": "2011-09-23T09:27:32Z",
                         "title": "HD Film Countdown Leader in 16x9 Ratio",
@@ -130,6 +133,10 @@ class MockYoutubeData:
                 }
             ]
         }
+
+    @property
+    def status_code(self) -> int:
+        return 200
 
 
 class MockAppleMusicData:
