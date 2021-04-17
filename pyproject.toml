@@ -6,7 +6,7 @@ authors = ["kengenal"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-"discord.py" = "^1.5.1"
+"discord.py" = "1.7.1"
 dnspython = "^2.0.0"
 mongoengine = "^0.22.1"
 PyJWT = "^2.0.0"
