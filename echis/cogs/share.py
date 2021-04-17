@@ -49,10 +49,19 @@ class Share(mixins.BaseCog):
         user = ctx.author.name
         return await ctx.send(self._add_playlist(api=func_name, playlist_id=playlist_id, username=user))
 
+    @add.command(pass_context=True, aliases=["apple-music"])
+    async def apple_music(self, ctx: Context, playlist_id: str):
+        if not playlist_id:
+            await ctx.send("Provide your playlist id")
+        func_name = inspect.stack()[0][3]
+        user = ctx.author.name
+        return await ctx.send(self._add_playlist(api=func_name, playlist_id=playlist_id, username=user))
+
     def _add_playlist(self, api: str, playlist_id: str, username: str) -> str:
         try:
             return Playlists.add_playlist(api=api, playlist_id=playlist_id, username=username)
-        except Exception:
+        except Exception as err:
+            print(err)
             raise Exception("Api is unavailable")
 
 

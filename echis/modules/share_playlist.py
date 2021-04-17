@@ -1,13 +1,15 @@
+import os
+
 import requests
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Iterator, Generator
 
 from echis.main import settings
 from echis.main.settings import SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_MARKET
-from echis.modules.token_authorization import SpotifyAuthorization
+from echis.modules.token_authorization import SpotifyAuthorization, AppleMusicToken
 
 
 @dataclass
@@ -209,6 +211,91 @@ class Youtube(AbstractShare, TokenRequired):
         try:
             token = self.get_token()
             rq = requests.get(self.playlist_url.format(token, playlist_id))
+            if rq.status_code != 200:
+                return False
+            return True
+        except ConnectionError as error:
+            raise ConnectionError(error)
+
+
+class AppleMusic(AbstractShare, TokenRequired):
+    def __init__(self):
+        secret = os.getenv("APPLE_SECRET_KEY")
+        key_id = os.getenv("APPLE_KEY_ID")
+        team_id = os.getenv("APPLE_TEAM_ID")
+        self.apple_token = AppleMusicToken(secret_key=secret, key_id=key_id, team_id=team_id)
+        self.playlists: List[Share] = []
+        self.playlist_id = None
+        self.owner = None
+
+    def fetch(self, playlist_id: str, limit: int = 1, owner: Optional[str] = None):
+        """
+        fetch playlist
+        :param playlist_id:
+        :param limit:
+        :param owner:
+        :return:
+        """
+        self.playlist_id = playlist_id
+        self.owner = owner
+        playlists: Optional[List] = []
+        try:
+            self.get_token()
+            rq = self.get_songs(playlist_id).json()
+            if "data" in rq:
+                playlists = list(reversed(rq["data"]))[:limit]
+            if playlists:
+                for playlist in self._generate(playlists):
+                    self.playlists.append(playlist)
+        except KeyError:
+            raise Exception("Cannot parse playlist")
+        except Exception:
+            raise Exception("Cannot download playlist")
+
+    def _generate(self, obj: List) -> Generator:
+        """
+        :param obj:  result from apple music api
+        :return:
+        """
+        for playlist in obj:
+            yield Share(
+                song_id=playlist["id"],
+                title=playlist["attributes"]["name"],
+                rank=0,
+                artist=playlist["attributes"]["artistName"],
+                cover=str(playlist["attributes"]["artwork"]["url"]).replace("{w}", "720").replace("{h}", "720"),
+                album=playlist["attributes"]["albumName"],
+                playlist_id=self.playlist_id,
+                added_to_playlist=playlist["attributes"]["releaseDate"],
+                added_by=self.owner,
+                link=playlist["attributes"]["url"],
+                api="apple-music"
+            )
+
+    def get_token(self) -> str:
+        """
+        run method for generate token
+        :return: str
+        """
+        self.apple_token.generate_token()
+        return self.apple_token.token
+
+    def get_songs(self, playlist_id):
+        playlists_endpoint = self.apple_token.endpoints.playlists
+        return requests.get(
+            playlists_endpoint.format(os.getenv("APPLE_STORE", "pl"), playlist_id),
+            headers=self.apple_token.headers
+        )
+
+    def playlist_is_exists(self, playlist_id: str) -> bool:
+        """
+        check if playlist exists
+        :param playlist_id:
+        :return:
+        """
+        try:
+            self.get_token()
+            rq = self.get_songs(playlist_id)
             if rq.status_code != 200:
                 return False
             return True

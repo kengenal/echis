@@ -6,18 +6,21 @@ from typing import List, Optional
 import mongoengine as me
 
 from echis.main import settings
-from echis.modules.share_playlist import Spotify, Deezer, Share, Youtube, AbstractShare
+from echis.modules.share_playlist import Spotify, Deezer, Share, Youtube, AbstractShare, AppleMusic
 
 
-def get_interface(name: str) -> AbstractShare:
+def get_interface(name: str) -> Optional[AbstractShare]:
     name_clear = name.strip().lower()
     client = {
-        "spotify": Spotify(),
-        "deezer": Deezer(),
-        "youtube": Youtube(),
+        "spotify": Spotify,
+        "deezer": Deezer,
+        "youtube": Youtube,
+        "apple_music": AppleMusic,
     }
     get_client = client.get(name_clear, None)
-    return get_client
+    if get_client:
+        return get_client()
+    return None
 
 
 class SharedSongs(me.Document):
@@ -80,13 +83,14 @@ class Playlists(me.Document):
         is_exist = Playlists.objects(playlist_id=playlist_id).count()
         if not is_exist:
             client = get_interface(api)
-            playlist_resolve = client.playlist_is_exists(playlist_id)
-            if playlist_resolve:
-                new_playlist = Playlists(playlist_id=playlist_id, user=username, api=api)
-                new_playlist.save()
-                return "Success, playlist has been added"
-            else:
-                return "Error, playlist not found"
+            if client:
+                playlist_resolve = client.playlist_is_exists(playlist_id)
+                if playlist_resolve:
+                    new_playlist = Playlists(playlist_id=playlist_id, user=username, api=api)
+                    new_playlist.save()
+                    return "Success, playlist has been added"
+                else:
+                    return "Error, playlist not found"
         else:
             return "Error, playlist already exists, playlist must be public"
 

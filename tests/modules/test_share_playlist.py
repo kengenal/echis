@@ -1,10 +1,11 @@
+import os
 from typing import Dict
 
 import pytest
 import requests
 from _pytest.monkeypatch import MonkeyPatch
 
-from echis.modules.share_playlist import Deezer, Share, Spotify, Youtube
+from echis.modules.share_playlist import Deezer, Share, Spotify, Youtube, AppleMusic
 from echis.modules.token_authorization import SpotifyAuthorization
 
 
@@ -112,6 +113,9 @@ class MockYoutubeData:
             "items": [
                 {
                     "id": "1234",
+                    "contentDetails": {
+                        "videoId": 123
+                    },
                     "snippet": {
                         "publishedAt": "2011-09-23T09:27:32Z",
                         "title": "HD Film Countdown Leader in 16x9 Ratio",
@@ -130,17 +134,79 @@ class MockYoutubeData:
             ]
         }
 
+    @property
+    def status_code(self) -> int:
+        return 200
+
+
+class MockAppleMusicData:
+    @staticmethod
+    def json() -> Dict:
+        return {
+            "next": "/v1/catalog/pl/playlists/pl.u-4JomaDDua6rRpX8/tracks?offset=1",
+            "data": [
+                {
+                    "id": "1363586737",
+                    "type": "songs",
+                    "href": "/v1/catalog/pl/songs/1363586737",
+                    "attributes": {
+                        "artwork": {
+                            "width": 2000,
+                            "height": 2000,
+                            "url": "https://is4-ssl.mzstatic.com/image/thumb/Music124/v4/e8/de/1c/img.jpg/{w}x{h}bb.jpeg",
+                            "bgColor": "0f0f0d",
+                            "textColor1": "d7d3f4",
+                            "textColor2": "cfced8",
+                            "textColor3": "afacc6",
+                            "textColor4": "a8a7af"
+                        },
+                        "artistName": "Jonathan Davis",
+                        "url": "https://music.apple.com/pl/album/test/",
+                        "discNumber": 1,
+                        "genreNames": [
+                            "Rock",
+                            "Music"
+                        ],
+                        "durationInMillis": 172899,
+                        "releaseDate": "2018-05-25",
+                        "name": "Everyone",
+                        "isrc": "m2kj13n",
+                        "hasLyrics": True,
+                        "albumName": "Album name",
+                        "playParams": {
+                            "id": "123123123",
+                            "kind": "song"
+                        },
+                        "trackNumber": 3,
+                        "composerName": "Random Artist"
+                    }
+                }
+            ]
+        }
+
+    @property
+    def status_code(self) -> int:
+        return 200
+
 
 class PlaylistNotFoundMock:
     @staticmethod
     def json() -> Dict:
         return {"error": {"status": 404}}
 
+    @property
+    def status_code(self) -> int:
+        return 404
+
 
 class PlaylistExistMock:
     @staticmethod
     def json() -> Dict:
         return {"random_playlist": {"status": 200}}
+
+    @property
+    def status_code(self) -> int:
+        return 200
 
 
 @pytest.fixture()
@@ -156,6 +222,10 @@ def spotify() -> Spotify:
 @pytest.fixture()
 def youtube() -> Youtube:
     return Youtube()
+
+
+def mock_apple_music_data(*args, **kwargs) -> MockAppleMusicData:
+    return MockAppleMusicData()
 
 
 def mock_get_empty_data(*args, **kwargs) -> MockResponseWithNoData:
@@ -236,7 +306,7 @@ class TestSpotify:
             [PlaylistNotFoundMock(), False],
             [PlaylistExistMock(), True]
     ))
-    def test_deezer_check_playlist_for_spotify(self, monkeypatch: MonkeyPatch, spotify: Spotify, take, expect):
+    def test_check_playlist_for_spotify(self, monkeypatch: MonkeyPatch, spotify: Spotify, take, expect):
         def get_mock(*args, **kwargs):
             return take
 
@@ -251,7 +321,6 @@ class TestYoutube:
     def test_get_lasted_with_data_from_youtube(self, monkeypatch: MonkeyPatch, youtube: Youtube):
         monkeypatch.setattr(requests, "get", mock_youtube_get_with_data)
         monkeypatch.setattr(Youtube, "get_token", mock_token)
-        monkeypatch.setattr(Youtube, "get_video", mock_get_video)
         youtube.fetch(playlist_id="sdij9iuqsajhd", owner="testowner")
         last = youtube.get_latest
 
@@ -276,3 +345,44 @@ class TestYoutube:
             youtube.fetch(playlist_id="sdij9iuqsajhd", owner="testowner")
             _ = youtube.get_latest
             assert error.value == "Youtube token is empty"
+
+
+class TestAppleMusic:
+    @pytest.fixture(autouse=True)
+    def setup(self) -> None:
+        self.apple = AppleMusic()
+
+    def test_get_lasted_with_data_from_apple_music(self, monkeypatch: MonkeyPatch):
+        monkeypatch.setattr(requests, "get", mock_apple_music_data)
+        monkeypatch.setattr(self.apple, "get_token", mock_token)
+        monkeypatch.setattr(Youtube, "get_video", mock_get_video)
+        self.apple.fetch('random', owner="testowner")
+        last = self.apple.get_latest
+
+        assert last.title is not None
+        assert last.song_id is not None
+        assert isinstance(last, Share)
+
+    def test_get_playlist_with_empty_token(self, monkeypatch: MonkeyPatch, youtube: Youtube):
+        with pytest.raises(Exception) as error:
+            os.environ["APPLE_SECRET_KEY"] = 123
+            monkeypatch.setattr(requests, "get", mock_apple_music_data())
+            monkeypatch.setattr(Youtube, "get_token", mock_token)
+
+            youtube.fetch(playlist_id="sdij9iuqsajhd", owner="testowner")
+            _ = youtube.get_latest
+            assert error.value == "Youtube token is empty"
+
+    @pytest.mark.parametrize("take, expect", (
+            [PlaylistNotFoundMock(), False],
+            [PlaylistExistMock(), True]
+    ))
+    def test_check_playlist_for_spotify(self, monkeypatch: MonkeyPatch, take, expect):
+        def get_mock(*args, **kwargs):
+            return take
+
+        monkeypatch.setattr(self.apple, "get_songs", get_mock)
+        monkeypatch.setattr(self.apple, "get_token", mock_token)
+        is_exist = self.apple.playlist_is_exists("908622995")
+
+        assert is_exist is expect

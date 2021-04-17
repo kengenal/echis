@@ -4,7 +4,11 @@ import datetime
 from dataclasses import dataclass
 from typing import Optional, Dict
 
+import jwt
 import requests
+
+from echis.modules.endpoints import AppleMusicEndpoints
+from echis.modules.exceptions import BadAppleMusicCredentialsException
 
 
 @dataclass
@@ -53,3 +57,51 @@ class SpotifyAuthorization:
                 self.token_type = json["token_type"]
         except Exception:
             raise Exception("Cannot get token from spotify")
+
+
+class AppleMusicToken:
+    def __init__(self, secret_key: str, key_id: str, team_id: str):
+        """
+        This class is used to connect to the Apple Music API and make requests for catalog resources
+        :param secret_key: Secret Key provided by Apple
+        :param key_id: Key ID provided by Apple
+        :param team_id: Team ID provided by Apple
+        """
+
+        self._secret_key = secret_key
+        self._key_id = key_id
+        self._team_id = team_id
+        self._alg = 'ES256'  # encryption algo that Apple requires
+        self.token = ""  # encrypted api token
+        self.headers: Dict = {}
+        self.endpoints = AppleMusicEndpoints()
+
+    def generate_token(self, session_length: float = 30.0):
+        """
+        Generate encrypted token to be used by in API requests.
+        Set the class token parameter.
+        :param session_length: Length Apple Music token is valid, in hours
+        """
+        headers = {
+            'alg': self._alg,
+            'kid': self._key_id
+        }
+        payload = {
+            'iss': self._team_id,  # issuer
+            'iat': int(datetime.datetime.now().timestamp()),  # issued at
+            'exp': int((datetime.datetime.now() + datetime.timedelta(minutes=session_length)).timestamp())
+        }
+        try:
+            token = jwt.encode(payload, self._secret_key.strip(), algorithm=self._alg, headers=headers)
+            self.token = token if type(token) is not bytes else token.decode()
+            self._generate_header()
+        except Exception:
+            raise BadAppleMusicCredentialsException()
+
+    def _generate_header(self):
+        """
+        Create auth header for apple music api
+        :return:
+        """
+        if token := self.token:
+            self.headers["Authorization"] = f"Bearer {token}"
