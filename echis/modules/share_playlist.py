@@ -238,7 +238,7 @@ class AppleMusic(AbstractShare, TokenRequired):
         """
         self.playlist_id = playlist_id
         self.owner = owner
-        playlists: Optional[List] = {}
+        playlists: Optional[List] = []
         try:
             self.get_token()
             rq = self.get_songs(playlist_id).json()
@@ -249,13 +249,12 @@ class AppleMusic(AbstractShare, TokenRequired):
                     self.playlists.append(playlist)
         except KeyError:
             raise Exception("Cannot parse playlist")
-        except Exception as err:
-            print(err)
+        except Exception:
             raise Exception("Cannot download playlist")
 
     def _generate(self, obj: List) -> Generator:
         """
-        :param obj:  #result from apple music api
+        :param obj:  result from apple music api
         :return:
         """
         for playlist in obj:
