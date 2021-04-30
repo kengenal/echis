@@ -2,10 +2,10 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
+filter.csv
 # C extensions
 *.so
-
+bad_words.csv
 # Distribution / packaging
 .Python
 config.ini

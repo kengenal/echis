@@ -13,6 +13,7 @@ COMMANDS = [
     "register",
     "share",
     "login",
+    "filter"
 ]
 
 TASKS = [
