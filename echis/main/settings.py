@@ -13,6 +13,7 @@ COMMANDS = [
     "register",
     "share",
     "login",
+    "filter"
 ]
 
 TASKS = [
@@ -20,6 +21,7 @@ TASKS = [
 ]
 
 ROOT_DIR = Path(__file__).resolve(strict=True).parent.parent
+FILTER = os.path.join(ROOT_DIR.parent, "filter.csv")
 
 TOKEN_SECRET = os.getenv("TOKEN_SECRET", default="7xdhbjn!silr%7mk_694^gufxry-m*!kif!4+e%x6haf2$#p+o")
 TOKEN_ALGORITHM = os.getenv("TOKEN_ALGORITHM", default="HS512")
