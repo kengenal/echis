@@ -9,7 +9,7 @@ from echis.modules.mongo import mongo_init
 def load_commands(client: BotClient, module_name: str):
     for ext in settings.COMMANDS:
         try:
-            client.load_extension(f"{module_name}.cogs.{ext}")
+            client.load_extension(f"{module_name}.commands.{ext}")
         except Exception as error:
             print(error)
 
