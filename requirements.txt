@@ -152,9 +152,9 @@ multidict==5.1.0; python_version >= "3.6" and python_full_version >= "3.5.3" \
 pycparser==2.20; python_version >= "2.7" and python_full_version < "3.0.0" or python_full_version >= "3.4.0" \
     --hash=sha256:7582ad22678f0fcd81102833f60ef8d0e57288b6b5fb00323d101be910e35705 \
     --hash=sha256:2d475327684562c3a96cc71adf7dc8c4f0565175cf86b6d7a404ff4c771f15f0
-pyjwt==2.0.1; python_version >= "3.6" \
-    --hash=sha256:b70b15f89dc69b993d8a8d32c299032d5355c82f9b5b7e851d1a6d706dffe847 \
-    --hash=sha256:a5c70a06e1f33d81ef25eecd50d50bd30e34de1ca8b2b9fa3fe0daaabcf69bf7
+pyjwt==2.4.0; python_version >= "3.6" \
+    --hash=sha256:72d1d253f32dbd4f5c88eaf1fdc62f3a19f676ccbadb9dbc5d07e951b2b26daf \
+    --hash=sha256:d42908208c699b3b973cbeb01a969ba6a96c821eefb1c5bfe4c390c01d67abba
 pymongo==3.11.3; python_version >= "3.6" \
     --hash=sha256:4d959e929cec805c2bf391418b1121590b4e7d5cb00af7b1ba521443d45a0918 \
     --hash=sha256:9fbffc5bad4df99a509783cbd449ed0d24fcd5a450c28e7756c8f20eda3d2aa5 \
